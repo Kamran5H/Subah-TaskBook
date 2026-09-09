@@ -1,0 +1,23 @@
+{
+  "name": "subah-taskbook",
+  "version": "1.0.0",
+  "description": "Subah - Daily Task & Surprise Reward Book",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/verify-logic.js && node test/verify-media-ui.js",
+    "package": "npx @electron/packager . Subah --platform=win32 --arch=x64 --out=dist --icon=assets/icon.ico --overwrite"
+  },
+  "keywords": [
+    "task-book",
+    "daily-planner",
+    "productivity",
+    "rewards"
+  ],
+  "author": "Kamran Ashraf",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^34.2.0"
+  }
+}

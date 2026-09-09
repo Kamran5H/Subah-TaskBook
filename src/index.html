@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subah - Daily Focus & Reward Book</title>
+  <link rel="stylesheet" href="styles/themes.css">
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/checklist.css">
+  <link rel="stylesheet" href="styles/planner.css">
+  <link rel="stylesheet" href="styles/rewards-library.css">
+  <link rel="stylesheet" href="styles/modal.css">
+  <link rel="stylesheet" href="styles/diary.css">
+</head>
+<body data-theme="midnight-aurora">
+
+  <!-- Sleek Frameless Titlebar -->
+  <header class="titlebar">
+    <div class="titlebar-brand">
+      <div class="brand-icon-wrapper">
+        <svg class="brand-icon-svg" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor"></circle>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+        </svg>
+      </div>
+      <div class="brand-text-col">
+        <span class="brand-title">Subah</span>
+        <span class="brand-subtitle">Daily Focus & Reward Book</span>
+      </div>
+    </div>
+
+    <!-- Segmented Navigation Pill Tabs -->
+    <nav class="nav-tabs-bar">
+      <button class="nav-tab-btn active" data-tab="checklist">
+        <span class="tab-icon">📋</span>
+        <span class="tab-label">Today's Tasks</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="planner">
+        <span class="tab-icon">✍️</span>
+        <span class="tab-label">Journal Planner</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="rewards">
+        <span class="tab-icon">🎁</span>
+        <span class="tab-label">Rewards</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="diary">
+        <span class="tab-icon">📖</span>
+        <span class="tab-label">Diary</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="settings">
+        <span class="tab-icon">⚙️</span>
+        <span class="tab-label">Settings</span>
+      </button>
+    </nav>
+
+    <!-- Window Controls -->
+    <div class="titlebar-controls">
+      <button id="btn-win-min" class="window-btn" title="Minimize to Tray">
+        <svg width="10" height="1" viewBox="0 0 10 1"><rect width="10" height="1" fill="currentColor"/></svg>
+      </button>
+      <button id="btn-win-max" class="window-btn" title="Maximize">
+        <svg width="10" height="10" viewBox="0 0 10 10"><rect width="8" height="8" x="1" y="1" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+      </button>
+      <button id="btn-win-close" class="window-btn close" title="Hide to System Tray">
+        <svg width="10" height="10" viewBox="0 0 10 10"><line x1="1" y1="1" x2="9" y2="9" stroke="currentColor" stroke-width="1.3"/><line x1="9" y1="1" x2="1" y2="9" stroke="currentColor" stroke-width="1.3"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- App Main Content Container -->
+  <main class="app-container">
+
+    <!-- =========================================
+         TAB 1: TODAY'S TASKS
+         ========================================= -->
+    <section id="tab-checklist" class="tab-screen active">
+      <!-- Date, Greeting & Streak Header -->
+      <div class="checklist-top-bar">
+        <div class="date-streak-group">
+          <h1 id="checklist-current-date" class="daily-date-heading">Today's Goals</h1>
+          <div id="checklist-hijri-date" class="hijri-date-text">
+            <span>🌙 Subah Bakhair • Blessed Morning</span>
+          </div>
+        </div>
+
+        <div class="streak-card-badge" title="Consecutive daily planning streak">
+          <span class="streak-fire-icon">🔥</span>
+          <div class="streak-info-text">
+            <span id="streak-count-num" class="streak-count-num">1</span>
+            <span class="streak-label-sub">Day Streak</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inspiration Card -->
+      <div class="daily-quote-card">
+        <span class="quote-icon">✨</span>
+        <span class="quote-text" id="daily-inspiration-text">
+          "The secret of getting ahead is getting started with sincere intentions and presence."
+        </span>
+      </div>
+
+      <!-- Progress Card -->
+      <div class="checklist-progress-card">
+        <div class="progress-header-row">
+          <span class="progress-title-text">
+            <span>🎯 Daily Progress</span>
+          </span>
+          <span id="checklist-progress-counter" class="progress-counter-badge">
+            0 of 0 Completed (0%)
+          </span>
+        </div>
+        <div class="progress-track">
+          <div id="checklist-progress-fill" class="progress-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- Quick Inline Add Task Input -->
+      <div class="add-task-bar">
+        <span class="add-task-plus">＋</span>
+        <input
+          type="text"
+          id="add-task-input"
+          class="add-task-input"
+          placeholder="Add a new goal for today (Press Enter)..."
+          autocomplete="off"
+        />
+        <button id="btn-add-task-submit" class="btn-primary-subtle">
+          Add Goal
+        </button>
+      </div>
+
+      <!-- Dynamic Task Items List -->
+      <div id="task-items-container" class="task-items-container">
+        <!-- Rendered dynamically by checklist.js -->
+      </div>
+
+      <!-- Maker's mark (decorative, pointer-events:none) -->
+      <div class="dev-signature-line">
+        <span class="dev-sig-inline-label">Developer</span><span class="dev-sig-inline-name signature-gold-text">Kamran Ashraf</span>
+      </div>
+    </section>
+
+    <!-- =========================================
+         TAB 2: JOURNAL PLANNER
+         ========================================= -->
+    <section id="tab-planner" class="tab-screen">
+      <div class="planner-header">
+        <div>
+          <h2 class="planner-title">Morning Journal Planner</h2>
+          <p class="planner-subtitle">Write your goals freely line-by-line. Each line converts into a checklist item.</p>
+        </div>
+        <div id="planner-counter-badge" class="planner-counter-pill">
+          0 goals written
+        </div>
+      </div>
+
+      <!-- Clean Writing Pad (No fake placeholder lines) -->
+      <div class="planner-pad-container">
+        <textarea
+          id="planner-textarea"
+          class="planner-textarea"
+          placeholder="Write today's goals here (one per line)..."
+          autofocus
+        ></textarea>
+      </div>
+
+      <!-- Action Bar -->
+      <div class="planner-footer-bar">
+        <span class="planner-hint">💡 Tip: Press Enter for each new goal</span>
+        <div class="planner-btn-group">
+          <button id="btn-clear-planner" class="btn-secondary">
+            Clear
+          </button>
+          <button id="btn-save-planner-tasks" class="btn-glow-primary">
+            <span>✨ Add to Today's Tasks →</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================
+         TAB 3: REWARDS SANCTUARY
+         ========================================= -->
+    <section id="tab-rewards" class="tab-screen">
+      <div class="rewards-lib-header">
+        <div>
+          <h2 class="rewards-lib-title">Surprise Rewards & Zen Sanctuary</h2>
+          <p class="rewards-lib-subtitle">Soulful Naats, legendary Qawwalis, peaceful melodies, and timeless pearls of wisdom.</p>
+        </div>
+        <button id="btn-open-random-reward" class="btn-glow-primary" style="padding: 9px 20px; font-size: 13px;">
+          🎲 Surprise Me Now
+        </button>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="rewards-filter-row">
+        <button class="filter-pill-btn active" data-category="all">All (20)</button>
+        <button class="filter-pill-btn" data-category="naat">🕌 Naats</button>
+        <button class="filter-pill-btn" data-category="qawwali">🎶 Qawwalis</button>
+        <button class="filter-pill-btn" data-category="melody">🎵 Melodies</button>
+        <button class="filter-pill-btn" data-category="mashwara">💡 Mashwara / Wisdom</button>
+        <button class="filter-pill-btn" data-category="reading">📖 Reading</button>
+        <button class="filter-pill-btn" data-category="reel">📱 Reels</button>
+      </div>
+
+      <!-- Rewards Cards Grid -->
+      <div id="rewards-library-grid" class="rewards-library-grid">
+        <!-- Rendered dynamically by rewards.js -->
+      </div>
+    </section>
+
+    <!-- =========================================
+         TAB 4: LIFE & FOCUS DIARY
+         ========================================= -->
+    <section id="tab-diary" class="tab-screen">
+      <div class="diary-header">
+        <div class="diary-title-col">
+          <h2 class="diary-main-title">Life & Focus Diary</h2>
+          <p class="diary-main-sub">Chronological record of daily commitments, accomplishments, and timestamps.</p>
+        </div>
+      </div>
+
+      <!-- Metrics Overview Bar -->
+      <div class="diary-metrics-grid">
+        <div class="diary-stat-card">
+          <span id="diary-stat-days" class="diary-stat-val">0 Days</span>
+          <span class="diary-stat-label">📅 Days Active</span>
+        </div>
+        <div class="diary-stat-card">
+          <span id="diary-stat-tasks" class="diary-stat-val">0 Done</span>
+          <span class="diary-stat-label">✅ Tasks Completed</span>
+        </div>
+        <div class="diary-stat-card">
+          <span id="diary-stat-rate" class="diary-stat-val">0%</span>
+          <span class="diary-stat-label">⚡ Completion Rate</span>
+        </div>
+        <div class="diary-stat-card">
+          <span id="diary-stat-streak" class="diary-stat-val">1 Day</span>
+          <span class="diary-stat-label">🔥 Current Streak</span>
+        </div>
+      </div>
+
+      <!-- Search & Filter Controls -->
+      <div class="diary-controls-bar">
+        <div class="diary-search-box">
+          <span class="diary-search-icon">🔍</span>
+          <input
+            type="text"
+            id="diary-search-input"
+            class="diary-search-input"
+            placeholder="Search past goals, keywords, or dates (e.g. 2026-09-08)..."
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="diary-filter-group">
+          <button class="diary-filter-btn active" data-filter="all">All Entries</button>
+          <button class="diary-filter-btn" data-filter="completed">Completed Only</button>
+          <button class="diary-filter-btn" data-filter="pending">Pending / Carried</button>
+        </div>
+      </div>
+
+      <!-- Timeline Container -->
+      <div id="diary-timeline-container" class="diary-timeline-container">
+        <!-- Rendered dynamically by diary.js -->
+      </div>
+    </section>
+
+    <!-- =========================================
+         TAB 5: SETTINGS & PREFERENCES
+         ========================================= -->
+    <section id="tab-settings" class="tab-screen">
+      <div class="settings-screen-body">
+        <div class="settings-header">
+          <h2 class="settings-main-title">Preferences & Personalization</h2>
+          <p class="settings-main-sub">Customize themes, startup behavior, acoustic feedback, and your favorite rewards.</p>
+        </div>
+
+        <!-- Visual Theme Selection -->
+        <div class="settings-block">
+          <h4 class="settings-section-title">Visual Aesthetic</h4>
+          <div class="theme-options-grid">
+            <div class="theme-card-btn active" data-theme="midnight-aurora">
+              <div class="theme-preview-dots">
+                <span class="preview-dot" style="background: #38bdf8;"></span>
+                <span class="preview-dot" style="background: #818cf8;"></span>
+                <span class="preview-dot" style="background: #080c16;"></span>
+              </div>
+              <div class="theme-card-info">
+                <span class="theme-name">Midnight Aurora</span>
+                <span class="theme-sub">Deep sapphire & cyan glow</span>
+              </div>
+            </div>
+
+            <div class="theme-card-btn" data-theme="royal-emerald">
+              <div class="theme-preview-dots">
+                <span class="preview-dot" style="background: #34d399;"></span>
+                <span class="preview-dot" style="background: #fbbf24;"></span>
+                <span class="preview-dot" style="background: #03140e;"></span>
+              </div>
+              <div class="theme-card-info">
+                <span class="theme-name">Royal Emerald & Gold</span>
+                <span class="theme-sub">Majestic jade & warm gold</span>
+              </div>
+            </div>
+
+            <div class="theme-card-btn" data-theme="obsidian-oled">
+              <div class="theme-preview-dots">
+                <span class="preview-dot" style="background: #22d3ee;"></span>
+                <span class="preview-dot" style="background: #ffffff;"></span>
+                <span class="preview-dot" style="background: #000000;"></span>
+              </div>
+              <div class="theme-card-info">
+                <span class="theme-name">Obsidian OLED</span>
+                <span class="theme-sub">Pure pitch black & electric cyan</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Startup & Audio Behavior with Modern Glass Toggles -->
+        <div class="settings-block">
+          <h4 class="settings-section-title">Application Behavior</h4>
+          <div class="settings-list-card">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-item-title">Open on Laptop 1st Login</span>
+                <span class="setting-item-desc">Subah gently greets you on your first login of the day to set your intentions.</span>
+              </div>
+              <label class="switch-control">
+                <input type="checkbox" id="toggle-startup-login" checked>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-item-title">Acoustic Chimes & Fanfares</span>
+                <span class="setting-item-desc">Plays celebratory chimes, completion bells, and mindful singing bowl timers.</span>
+              </div>
+              <label class="switch-control">
+                <input type="checkbox" id="toggle-sound-effects" checked>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom User Rewards Section -->
+        <div class="settings-block">
+          <h4 class="settings-section-title">Add Your Favorite Reward Links</h4>
+          <div class="add-custom-reward-box">
+            <div class="form-grid">
+              <input type="text" id="custom-reward-title" class="form-input" placeholder="Title (e.g. Favorite Naat, Qawwali, Recitation)...">
+              <select id="custom-reward-category" class="form-select">
+                <option value="naat">🕌 Soulful Naat</option>
+                <option value="qawwali">🎶 Qawwali</option>
+                <option value="melody">🎵 Peaceful Melody</option>
+                <option value="mashwara">💡 Mashwara / Advice</option>
+                <option value="reel">📱 Short Reel</option>
+              </select>
+            </div>
+            <div class="form-grid">
+              <input type="url" id="custom-reward-link" class="form-input" placeholder="YouTube or Web URL (https://...)">
+              <input type="text" id="custom-reward-duration" class="form-input" placeholder="Duration (e.g. 6 mins)">
+            </div>
+            <button id="btn-submit-custom-reward" class="btn-glow-primary" style="padding: 10px 22px; font-size: 13px; align-self: flex-start;">
+              ＋ Add to My Rewards
+            </button>
+            <div id="custom-rewards-list" class="custom-rewards-list"></div>
+          </div>
+        </div>
+
+        <!-- Golden maker's mark (decorative, pointer-events:none) -->
+        <div class="settings-block">
+          <div class="dev-signature-plate">
+            <div class="dev-sig-rule"></div>
+            <span class="dev-sig-label">Developer</span>
+            <span class="dev-sig-name signature-gold-text">Kamran Ashraf</span>
+            <div class="dev-sig-ornament">✦ ✦ ✦</div>
+            <div class="dev-sig-rule bottom"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =========================================
+       SURPRISE REWARD MODAL & ZEN THEATER
+       ========================================= -->
+  <div id="reward-modal" class="modal-overlay">
+    <div class="modal-card">
+
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-gift-icon">🎁</span>
+          <span class="modal-title">Well-Earned Surprise Reward</span>
+        </div>
+        <button id="btn-close-reward-modal" class="btn-close-modal" title="Close">✕</button>
+      </div>
+
+      <!-- Stage 1: Unboxing Animation -->
+      <div id="unboxing-stage" class="unboxing-stage">
+        <div class="gift-box-glow"></div>
+        <div id="mystery-gift-box-el" class="mystery-gift-box" title="Click to open immediately!">
+          <svg class="gift-box-svg" viewBox="0 0 100 100">
+            <rect x="15" y="40" width="70" height="50" rx="8" fill="#f59e0b"/>
+            <rect x="10" y="28" width="80" height="16" rx="5" fill="#fbbf24"/>
+            <rect x="44" y="28" width="12" height="62" fill="#ef4444"/>
+            <rect x="15" y="60" width="70" height="12" fill="#ef4444"/>
+            <path d="M 50 28 C 35 15, 25 25, 45 28 Z" fill="#ef4444"/>
+            <path d="M 50 28 C 65 15, 75 25, 55 28 Z" fill="#ef4444"/>
+          </svg>
+        </div>
+        <h3 class="unboxing-title">Unwrapping Your Surprise Reward...</h3>
+        <p class="unboxing-sub">
+          Congratulations on completing a task! Enjoy a peaceful 5–10 minute break.
+        </p>
+      </div>
+
+      <!-- Stage 2: Reward Theater Player -->
+      <div id="reward-stage" class="reward-stage">
+        <div class="reward-meta-row">
+          <div id="reward-category-badge" class="reward-category-chip">
+            🕌 Soulful Naat
+          </div>
+          <span class="reward-break-notice">
+            Mindful 5–10 min breather
+          </span>
+        </div>
+
+        <div class="reward-title-group">
+          <h2 id="reward-title-text" class="reward-title-main">Title of the Reward</h2>
+          <p id="reward-artist-text" class="reward-artist-sub">Artist / Author</p>
+        </div>
+
+        <!-- Cinema Video Embed -->
+        <div id="cinema-player-box" class="cinema-player-box"></div>
+
+        <!-- Reading Card -->
+        <div id="reading-content-box" class="reading-content-card" style="display: none;"></div>
+
+        <!-- Break Countdown Timer Bar -->
+        <div class="reward-timer-bar">
+          <div class="timer-left">
+            <div id="timer-clock-badge" class="timer-clock-badge">07:00</div>
+            <div class="timer-duration-options">
+              <button class="timer-dur-btn" data-mins="5">5 Min</button>
+              <button class="timer-dur-btn active" data-mins="7">7 Min</button>
+              <button class="timer-dur-btn" data-mins="10">10 Min</button>
+            </div>
+            <button id="btn-timer-toggle" class="btn-secondary timer-toggle-btn">
+              ⏸ Pause
+            </button>
+          </div>
+
+          <div class="reward-actions-group">
+            <button id="btn-open-in-browser" class="btn-secondary">
+              🌐 Open in Browser
+            </button>
+            <button id="btn-back-to-work" class="btn-glow-primary">
+              Back to Work →
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Application Scripts -->
+  <script src="js/rewardData.js"></script>
+  <script src="js/confetti.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/checklist.js"></script>
+  <script src="js/rewards.js"></script>
+  <script src="js/planner.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/diary.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

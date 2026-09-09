@@ -1,0 +1,546 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-base);
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure all interactive controls are fully clickable, selectable, and editable */
+input, textarea, select {
+  -webkit-app-region: no-drag !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  cursor: text !important;
+  pointer-events: auto !important;
+}
+
+button, a, .window-btn, .nav-tab-btn, .filter-pill-btn, .theme-card-btn, .switch-control {
+  -webkit-app-region: no-drag !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* Frameless Modern Titlebar */
+.titlebar {
+  height: 52px;
+  background: rgba(8, 12, 22, 0.65);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  -webkit-app-region: drag;
+  z-index: 1000;
+  flex-shrink: 0;
+}
+
+.titlebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-icon-wrapper {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.18), rgba(56, 189, 248, 0.12));
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-icon-svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--accent-gold);
+  stroke-width: 2.2;
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
+}
+
+.brand-text-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 15.5px;
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, #ffffff 30%, var(--accent-cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.15;
+}
+
+.brand-subtitle {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+/* Segmented Pill Navigation Tabs */
+.nav-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  -webkit-app-region: no-drag;
+}
+
+.nav-tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.nav-tab-btn .tab-icon {
+  font-size: 13px;
+}
+
+.nav-tab-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.nav-tab-btn.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Titlebar Window Controls */
+.titlebar-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.window-btn {
+  width: 34px;
+  height: 30px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  border-radius: 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+  -webkit-app-region: no-drag !important;
+}
+
+.window-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.window-btn.close:hover {
+  background: #e11d48;
+  color: #ffffff;
+}
+
+/* App Main Container */
+.app-container {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  -webkit-app-region: no-drag !important;
+}
+
+/* Tab Screens */
+.tab-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+}
+
+.tab-screen.active {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Safety net: an inactive tab must never intercept clicks, even if some later
+   stylesheet forces it visible with a higher-specificity selector. */
+.tab-screen:not(.active) {
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* Modern Glowing Buttons */
+.btn-glow-primary {
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo));
+  color: #030712;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 9px 20px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--glow-accent);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.btn-glow-primary:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 0 28px rgba(56, 189, 248, 0.5);
+  filter: brightness(1.08);
+}
+
+.btn-glow-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary-subtle {
+  background: rgba(56, 189, 248, 0.14);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-primary-subtle:hover {
+  background: var(--accent-cyan);
+  color: #030712;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Custom Modern Toggle Switch (Glass slider) */
+.switch-control {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.switch-control input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 34px;
+}
+
+.switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.switch-control input:checked + .switch-slider {
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo));
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+}
+
+.switch-control input:checked + .switch-slider:before {
+  transform: translateX(20px);
+  background-color: #ffffff;
+}
+
+/* Toast Notifications */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  background: rgba(18, 25, 41, 0.95);
+  border: 1px solid var(--border-accent);
+  color: #ffffff;
+  padding: 11px 18px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), var(--glow-accent);
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: auto;
+}
+
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ===========================================================================
+   Maker's Mark — golden developer signature
+   Purely decorative: always in normal document flow and pointer-events:none so
+   it can never shift layout or intercept a click (see .tab-screen note above).
+   Gold is rendered as its own gradient rather than var(--accent-gold) so it
+   stays legible on Royal Emerald, where the theme accent is already gold.
+   =========================================================================== */
+
+.signature-gold-text {
+  background: linear-gradient(100deg, #a97e2f 0%, #f3d27a 22%, #fffbe8 42%, #f6d67a 58%, #c9992f 78%, #f3d27a 100%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: signatureShimmer 7s linear infinite;
+}
+
+@keyframes signatureShimmer {
+  0%   { background-position: 0% center; }
+  100% { background-position: 220% center; }
+}
+
+/* --- Showcase plate (Settings tab) --- */
+.dev-signature-plate {
+  margin-top: 6px;
+  padding: 22px 18px 24px;
+  border-radius: var(--radius-lg, 16px);
+  text-align: center;
+  position: relative;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 140% at 50% 0%, rgba(246, 214, 122, 0.10) 0%, rgba(0, 0, 0, 0) 60%),
+    rgba(0, 0, 0, 0.30);
+  border: 1px solid rgba(246, 214, 122, 0.26);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 245, 214, 0.16),
+    0 14px 34px rgba(0, 0, 0, 0.42);
+  overflow: hidden;
+}
+
+.dev-signature-plate::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 38%, rgba(255, 248, 222, 0.10) 50%, transparent 62%);
+  background-size: 260% 100%;
+  animation: signatureShimmer 7s linear infinite;
+}
+
+.dev-sig-rule {
+  width: 92px;
+  height: 1px;
+  margin: 0 auto 14px;
+  background: linear-gradient(90deg, transparent, rgba(246, 214, 122, 0.85), transparent);
+}
+
+.dev-sig-rule.bottom {
+  margin: 14px auto 0;
+}
+
+.dev-sig-label {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 3.4px;
+  text-transform: uppercase;
+  color: rgba(246, 214, 122, 0.75);
+  margin-bottom: 7px;
+}
+
+.dev-sig-name {
+  display: block;
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  line-height: 1.18;
+  filter: drop-shadow(0 2px 10px rgba(246, 214, 122, 0.30));
+}
+
+.dev-sig-ornament {
+  margin-top: 9px;
+  font-size: 12px;
+  letter-spacing: 6px;
+  color: rgba(246, 214, 122, 0.55);
+}
+
+/* --- Slim daily signature (Checklist tab footer) --- */
+.dev-signature-line {
+  flex-shrink: 0;
+  margin-top: 4px;
+  padding: 9px 0 2px;
+  text-align: center;
+  pointer-events: none;
+  border-top: 1px solid rgba(246, 214, 122, 0.14);
+}
+
+.dev-signature-line .dev-sig-inline-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.7px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-right: 7px;
+  vertical-align: middle;
+}
+
+.dev-signature-line .dev-sig-inline-name {
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+  filter: drop-shadow(0 1px 6px rgba(246, 214, 122, 0.26));
+}
+
+/* --- Embed fallback card (shown when a video cannot play inline) --- */
+.embed-fallback-card {
+  height: 100%;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 26px 22px;
+  gap: 4px;
+}
+
+.embed-fallback-icon { font-size: 34px; margin-bottom: 6px; }
+
+.embed-fallback-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.embed-fallback-sub {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  max-width: 430px;
+  margin-bottom: 16px;
+}
+
+.embed-fallback-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signature-gold-text,
+  .dev-signature-plate::before { animation: none; }
+}
