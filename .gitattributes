@@ -1,0 +1,32 @@
+# Normalize line endings deterministically so Git stops re-converting on Windows.
+# Text files are stored as LF in the repository regardless of each dev's core.autocrlf.
+
+* text=auto eol=lf
+
+# Source and config: always LF (repo + working tree), no conversion, no warnings.
+*.js    text eol=lf
+*.mjs   text eol=lf
+*.cjs   text eol=lf
+*.json  text eol=lf
+*.css   text eol=lf
+*.html  text eol=lf
+*.md    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.txt   text eol=lf
+
+# Windows-only launch scripts must keep CRLF or the shell mishandles them.
+*.bat   text eol=crlf
+*.vbs   text eol=crlf
+*.cmd   text eol=crlf
+*.ps1   text eol=crlf
+
+# Binary assets: never touched, never diffed as text.
+*.ico   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.svg   text eol=lf
+*.woff2 binary
+*.exe   binary
