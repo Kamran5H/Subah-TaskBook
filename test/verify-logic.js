@@ -14,12 +14,35 @@ assert(DEFAULT_REWARDS.length >= 10, "Should have at least 10 curated rewards");
 
 console.log(`✓ Reward Library verified: ${DEFAULT_REWARDS.length} curated items loaded.`);
 
-const requiredCategories = ["naat", "qawwali", "melody", "mashwara", "reading", "reel"];
+const requiredCategories = ["naat", "qawwali", "melody", "mashwara", "reading", "reel", "dua", "breathing"];
 requiredCategories.forEach(cat => {
   const count = DEFAULT_REWARDS.filter(r => r.category === cat).length;
   assert(count > 0, `Category '${cat}' must have at least one reward`);
   console.log(`  - Category [${cat}]: ${count} items`);
 });
+
+// Content-only categories must be fully offline-safe: real markdown content and no
+// pinned youtubeId that could rot. This is what makes the reward always deliverable.
+const OFFLINE_CATEGORIES = ["dua", "breathing"];
+OFFLINE_CATEGORIES.forEach(cat => {
+  const items = DEFAULT_REWARDS.filter(r => r.category === cat);
+  items.forEach(r => {
+    assert(r.content && r.content.trim().length > 0, `Offline reward '${r.id}' must carry markdown content`);
+    assert(!r.youtubeId, `Offline reward '${r.id}' must not pin a youtubeId (would defeat offline-safety)`);
+  });
+});
+const offlineCount = DEFAULT_REWARDS.filter(r => r.content).length;
+console.log(`✓ ${offlineCount} content rewards are offline-safe (markdown, no network needed).`);
+
+// Every reward must declare a category that the UI can actually filter on and label.
+const KNOWN_CATEGORIES = new Set(requiredCategories);
+const orphanCats = [...new Set(DEFAULT_REWARDS.map(r => r.category))].filter(c => !KNOWN_CATEGORIES.has(c));
+assert.deepStrictEqual(orphanCats, [], "reward categories with no UI filter pill: " + orphanCats.join(", "));
+
+// Every reward needs a stable id and no two may collide.
+const ids = DEFAULT_REWARDS.map(r => r.id);
+assert.strictEqual(new Set(ids).size, ids.length, "duplicate reward ids detected");
+console.log(`✓ All ${ids.length} reward ids are unique and categories map to UI filters.`);
 
 // 2. Test Flexible Goal Input (Accepts any count >= 1, encouraging without locking)
 function validateGoalTasks(tasks) {

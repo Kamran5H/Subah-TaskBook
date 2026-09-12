@@ -1,5 +1,8 @@
 // Curated Reward Library for Subah Task Book
-// Categories: Naat, Qawwali, Soulful Melody, Daily Mashwara (Wisdom), Inspiring Reading, Mindful Reel
+// Categories: Naat, Qawwali, Soulful Melody, Daily Mashwara (Wisdom), Inspiring Reading,
+//             Mindful Reel, Dua & Zikr, Breathe & Move.
+// Dua, Breathe & Move, and the extra Mashwara/Reading entries are content-only (no video):
+// they render from local markdown, so they work fully offline and can never link-rot.
 //
 // Every youtubeId was verified TWICE: (1) it exists (YouTube oEmbed 200), and
 // (2) it is actually embeddable - loaded inside the real app with no onError.
@@ -242,6 +245,245 @@ const DEFAULT_REWARDS = [
     "externalUrl": "https://www.youtube.com/watch?v=BHACKCNDMW8",
     "description": "Beautiful scenic imagery paired with a reminder that nothing written for you will miss you.",
     "searchUrl": "https://www.youtube.com/results?search_query=Amazing%20Nature%20Scenery%20Cat%20Trumpet"
+  },
+
+  // ── Extra Mashwara (Wisdom) ────────────────────────────────────────────────
+  {
+    "id": "mashwara-04",
+    "category": "mashwara",
+    "categoryLabel": "💡 Daily Mashwara",
+    "title": "Eat the Frog: Do the Hardest Task First",
+    "author": "Productivity Wisdom",
+    "duration": "3 mins",
+    "content": "### 🐸 Swallow the Frog\nMark Twain is said to have quipped: if the first thing you do each morning is eat a live frog, you can go through the day knowing the worst is already behind you.\n\n**The Mashwara:**\n1. Look at today's list and find the ONE task you are quietly dreading.\n2. Do it first, before email, before tea, before the easy wins.\n3. Notice how the whole day tilts downhill after that single act of courage.\n\n> *\"If it's your job to eat a frog, do it first thing in the morning.\"*",
+    "description": "The single most reliable trick for beating procrastination on hard days.",
+    "searchUrl": "https://www.youtube.com/results?search_query=eat%20the%20frog%20productivity%20do%20hardest%20task%20first"
+  },
+  {
+    "id": "mashwara-05",
+    "category": "mashwara",
+    "categoryLabel": "💡 Daily Mashwara",
+    "title": "The Two-Minute Rule for Starting",
+    "author": "Atomic Habits Principle",
+    "duration": "3 mins",
+    "content": "### ⏱️ Shrink It Until You Start\nMotivation is overrated; starting is everything. When a task feels heavy, you are usually imagining the whole mountain instead of the first step.\n\n**The Mashwara:**\n- Redefine the task as a two-minute version. \"Write the report\" becomes \"open the doc and title it.\"\n- Promise yourself you may stop after two minutes.\n- You almost never will — motion creates momentum, and momentum finishes the job.",
+    "description": "How to trick a reluctant mind into beginning heavy work.",
+    "searchUrl": "https://www.youtube.com/results?search_query=two%20minute%20rule%20atomic%20habits"
+  },
+  {
+    "id": "mashwara-06",
+    "category": "mashwara",
+    "categoryLabel": "💡 Daily Mashwara",
+    "title": "Gratitude Turns Enough Into Plenty",
+    "author": "Timeless Wisdom",
+    "duration": "3 mins",
+    "content": "### 🙏 Count Three Blessings\nThe restless heart always chases the next thing and never arrives. A grateful heart is already home.\n\n**The Mashwara:**\nBefore your next task, name three specific blessings from the last hour — the warmth of your drink, a working body, a roof, a message from someone who cares.\n\n> *\"Gratitude turns what we have into enough.\"*\n\nAbundance is not a bigger pile; it is a clearer pair of eyes.",
+    "description": "A 60-second reset that shifts you from lack to sufficiency.",
+    "searchUrl": "https://www.youtube.com/results?search_query=gratitude%20practice%20three%20blessings"
+  },
+  {
+    "id": "mashwara-07",
+    "category": "mashwara",
+    "categoryLabel": "💡 Daily Mashwara",
+    "title": "Progress, Not Perfection",
+    "author": "Craftsman's Creed",
+    "duration": "3 mins",
+    "content": "### 🎯 Done Beats Perfect\nPerfectionism is fear wearing a fine suit. It whispers that unfinished-but-flawless is safer than finished-and-real. It is not.\n\n**The Mashwara:**\n- Ship the B+ version today; you can polish tomorrow with real feedback.\n- Ask: *would a wise friend call this good enough?* If yes, move on.\n- The world rewards finished work, not private masterpieces no one ever sees.",
+    "description": "For the days a task stalls because it isn't 'perfect' yet.",
+    "searchUrl": "https://www.youtube.com/results?search_query=progress%20not%20perfection%20overcoming%20perfectionism"
+  },
+  {
+    "id": "mashwara-08",
+    "category": "mashwara",
+    "categoryLabel": "💡 Daily Mashwara",
+    "title": "Single-Tasking Is a Superpower",
+    "author": "Deep Work Notes",
+    "duration": "4 mins",
+    "content": "### 🧠 One Thing at a Time\nSwitching between tasks feels productive but leaves a cognitive residue — part of your mind stays stuck on the last thing. You pay a tax on every switch.\n\n**The Mashwara:**\n1. Close every tab that does not serve the current task.\n2. Put the phone in another room, face down, on silent.\n3. Give one task twenty-five unbroken minutes. Then rest.\n\nDepth, not speed, is where your best work lives.",
+    "description": "Why focus on one task outperforms juggling five.",
+    "searchUrl": "https://www.youtube.com/results?search_query=deep%20work%20single%20tasking%20focus"
+  },
+
+  // ── Extra Thoughts to Ponder (Reading) ─────────────────────────────────────
+  {
+    "id": "reading-03",
+    "category": "reading",
+    "categoryLabel": "📖 Thought to Ponder",
+    "title": "The Woodcutter Who Forgot to Sharpen His Axe",
+    "author": "Classic Parable",
+    "duration": "3 mins",
+    "content": "### 🪓 Sharpen the Axe\nA strong young woodcutter felled many trees his first day. Determined to do better, he worked longer and harder each day after — yet his count kept falling.\n\nThe foreman asked: *\"When did you last sharpen your axe?\"*\nThe woodcutter blinked. *\"Sharpen? I've had no time — I've been too busy cutting.\"*\n\n**Reflect:**\nRest, learning, and reflection are not time stolen from work — they are what keeps the blade sharp. This very break is you sharpening your axe.",
+    "description": "A reminder that rest and renewal make you more effective, not less.",
+    "searchUrl": "https://www.youtube.com/results?search_query=woodcutter%20sharpen%20the%20axe%20story"
+  },
+  {
+    "id": "reading-04",
+    "category": "reading",
+    "categoryLabel": "📖 Thought to Ponder",
+    "title": "The Two Wolves Within",
+    "author": "Cherokee Legend",
+    "duration": "3 mins",
+    "content": "### 🐺 Which Wolf Wins?\nAn elder told his grandson: *\"A battle rages inside me between two wolves. One is anger, envy, resentment, and fear. The other is peace, hope, kindness, and truth. The same fight is inside you, and inside every person.\"*\n\nThe boy thought, then asked: *\"Which wolf wins?\"*\n\nThe elder smiled quietly: *\"The one you feed.\"*\n\n**Reflect:**\nEvery task you finish with patience, every kind word, every honest effort — that is you feeding the good wolf today.",
+    "description": "On the daily choice of what we nurture within ourselves.",
+    "searchUrl": "https://www.youtube.com/results?search_query=two%20wolves%20cherokee%20story%20which%20one%20you%20feed"
+  },
+  {
+    "id": "reading-05",
+    "category": "reading",
+    "categoryLabel": "📖 Thought to Ponder",
+    "title": "The Emptied Cup",
+    "author": "Zen Tradition",
+    "duration": "3 mins",
+    "content": "### 🍵 Empty Your Cup\nA proud scholar visited a Zen master to learn. As the master poured tea, he kept pouring past the brim, tea spilling everywhere. The scholar cried out, *\"Stop! The cup is full!\"*\n\nThe master replied: *\"Like this cup, you are full of your own opinions. How can I show you wisdom unless you first empty your cup?\"*\n\n**Reflect:**\nApproach today's hard problem like an empty cup — curious, humble, willing to be wrong. That is where new answers pour in.",
+    "description": "On humility and staying open to learning.",
+    "searchUrl": "https://www.youtube.com/results?search_query=zen%20empty%20your%20cup%20story"
+  },
+  {
+    "id": "reading-06",
+    "category": "reading",
+    "categoryLabel": "📖 Thought to Ponder",
+    "title": "The Elephant and the Rope",
+    "author": "Eastern Fable",
+    "duration": "3 mins",
+    "content": "### 🐘 The Thin Rope\nA traveler saw great elephants held by nothing but a thin rope tied to a small stake. Any one of them could snap it in a second, yet none tried.\n\nThe keeper explained: *\"When they are young and small, that same rope truly holds them. They try, they fail, and in time they stop trying. They grow enormous still believing the rope can hold them.\"*\n\n**Reflect:**\nWhich old \"I can't\" is a rope you outgrew years ago? Test it today. You may be far stronger than the story you inherited.",
+    "description": "On the invisible limits we carry long after they stop being true.",
+    "searchUrl": "https://www.youtube.com/results?search_query=elephant%20and%20the%20rope%20motivational%20story"
+  },
+  {
+    "id": "reading-07",
+    "category": "reading",
+    "categoryLabel": "📖 Thought to Ponder",
+    "title": "The Farmer's 'Maybe'",
+    "author": "Taoist Parable",
+    "duration": "4 mins",
+    "content": "### 🐎 We'll See\nA farmer's horse ran away. \"How unlucky!\" said the neighbors. *\"Maybe,\"* said the farmer.\n\nThe horse returned with three wild horses. \"How lucky!\" *\"Maybe,\"* he said.\n\nHis son broke his leg taming one. \"How terrible!\" *\"Maybe.\"*\n\nThe army came conscripting young men for war but passed over the son with the broken leg. \"How fortunate!\" *\"Maybe,\"* said the farmer.\n\n**Reflect:**\nToday's setback and today's win are both just chapters. Hold both loosely, keep working, and let the story unfold.",
+    "description": "On equanimity — not judging each event as it lands.",
+    "searchUrl": "https://www.youtube.com/results?search_query=chinese%20farmer%20maybe%20story%20alan%20watts"
+  },
+
+  // ── Dua & Remembrance (offline, always available) ──────────────────────────
+  {
+    "id": "dua-01",
+    "category": "dua",
+    "categoryLabel": "🤲 Dua & Zikr",
+    "title": "Dua for Ease in a Difficult Task",
+    "author": "Prophetic Supplication",
+    "duration": "2 mins",
+    "content": "### 🤲 A Dua for Ease\n*Allahumma la sahla illa ma ja'altahu sahla, wa anta taj'alul-hazna idha shi'ta sahla.*\n\n**Meaning:**\n\"O Allah, there is no ease except in what You have made easy, and You make the difficult easy if You will.\"\n\n**Practice:**\nBreathe slowly, say it once with full presence, and return to your task trusting that effort is yours and outcome is His.",
+    "description": "A short, calming supplication to recite before hard work.",
+    "searchUrl": "https://www.youtube.com/results?search_query=dua%20for%20ease%20allahumma%20la%20sahla%20illa"
+  },
+  {
+    "id": "dua-02",
+    "category": "dua",
+    "categoryLabel": "🤲 Dua & Zikr",
+    "title": "Seeking Beneficial Knowledge & Focus",
+    "author": "Prophetic Supplication",
+    "duration": "2 mins",
+    "content": "### 🤲 For a Clear Mind\n*Rabbi zidni 'ilma.* — \"My Lord, increase me in knowledge.\" (Qur'an 20:114)\n\nAnd: *Allahumma infa'ni bima 'allamtani wa 'allimni ma yanfa'uni.* — \"O Allah, benefit me by what You taught me, teach me what benefits me.\"\n\n**Practice:**\nSay these before study or focused work. Ask for clarity, then give the task your sincere attention.",
+    "description": "Supplications for clarity and beneficial focus before study.",
+    "searchUrl": "https://www.youtube.com/results?search_query=rabbi%20zidni%20ilma%20dua%20for%20knowledge"
+  },
+  {
+    "id": "dua-03",
+    "category": "dua",
+    "categoryLabel": "🤲 Dua & Zikr",
+    "title": "The Weightless Words of Zikr",
+    "author": "Hadith",
+    "duration": "2 mins",
+    "content": "### 🌿 Light on the Tongue, Heavy on the Scale\n*SubhanAllahi wa bihamdihi, SubhanAllahil-'Azeem.*\n\n\"Two words light upon the tongue, heavy on the Scale, beloved to the Most Merciful.\"\n\n**Practice:**\nRepeat gently ten times, matching each phrase to a slow breath. Feel the mind quiet as the words settle the heart.",
+    "description": "A brief, soothing remembrance to reset between tasks.",
+    "searchUrl": "https://www.youtube.com/results?search_query=subhanallahi%20wa%20bihamdihi%20zikr"
+  },
+  {
+    "id": "dua-04",
+    "category": "dua",
+    "categoryLabel": "🤲 Dua & Zikr",
+    "title": "Dua Against Worry & Anxiety",
+    "author": "Prophetic Supplication",
+    "duration": "3 mins",
+    "content": "### 🕊️ When the Chest Feels Tight\n*Allahumma inni a'udhu bika minal-hammi wal-hazan, wal-'ajzi wal-kasal.*\n\n**Meaning:**\n\"O Allah, I seek refuge in You from worry and grief, from helplessness and laziness.\"\n\n**Practice:**\nName what is weighing on you, say the dua, and then take one small concrete action. Trust plus action dissolves anxiety far better than either alone.",
+    "description": "A supplication to lift worry and restlessness mid-day.",
+    "searchUrl": "https://www.youtube.com/results?search_query=dua%20for%20anxiety%20worry%20allahumma%20inni%20audhu%20bika%20minal%20hammi"
+  },
+  {
+    "id": "dua-05",
+    "category": "dua",
+    "categoryLabel": "🤲 Dua & Zikr",
+    "title": "Gratitude After Completion",
+    "author": "Prophetic Practice",
+    "duration": "2 mins",
+    "content": "### 🌟 Close the Loop With Thanks\nWhen a task is done, pause and say: *Alhamdulillah* — all praise belongs to God.\n\n**Practice:**\nDon't rush from one finish line straight into the next race. Give the completed work three breaths of quiet gratitude. This is how effort becomes blessing rather than mere busyness.",
+    "description": "A tiny gratitude ritual to seal each accomplishment.",
+    "searchUrl": "https://www.youtube.com/results?search_query=alhamdulillah%20gratitude%20reflection"
+  },
+  {
+    "id": "dua-06",
+    "category": "dua",
+    "categoryLabel": "🤲 Dua & Zikr",
+    "title": "Istighfar — The Opener of Doors",
+    "author": "Hadith",
+    "duration": "3 mins",
+    "content": "### 🚪 Astaghfirullah\nIt is related that whoever keeps to seeking forgiveness, God grants him relief from every worry, a way out of every hardship, and provision from where he did not expect.\n\n**Practice:**\nGently repeat *Astaghfirullah* while walking to refill your water or stretch. Let each repetition loosen a knot of tension you didn't know you were holding.",
+    "description": "A gentle, repetitive remembrance for a restless break.",
+    "searchUrl": "https://www.youtube.com/results?search_query=astaghfirullah%20istighfar%20benefits"
+  },
+
+  // ── Breathe & Move (guided micro-practices, fully offline) ──────────────────
+  {
+    "id": "breathe-01",
+    "category": "breathing",
+    "categoryLabel": "🌬️ Breathe & Move",
+    "title": "Box Breathing — Calm in 4 Rounds",
+    "author": "Guided Practice",
+    "duration": "3 mins",
+    "content": "### 🌬️ Box Breathing (4-4-4-4)\nUsed by athletes and calm professionals to steady the nervous system in minutes.\n\n**Do this four times:**\n1. Breathe **in** through the nose — 4 counts.\n2. **Hold** — 4 counts.\n3. Breathe **out** through the mouth — 4 counts.\n4. **Hold** empty — 4 counts.\n\nDrop the shoulders. Soften the jaw. Notice the mind grow quiet and wide. Return to work from stillness, not from rush.",
+    "description": "A 3-minute breathing pattern that resets a racing mind.",
+    "searchUrl": "https://www.youtube.com/results?search_query=box%20breathing%204%204%204%204%20guided"
+  },
+  {
+    "id": "breathe-02",
+    "category": "breathing",
+    "categoryLabel": "🌬️ Breathe & Move",
+    "title": "4-7-8 Breath — The Natural Tranquilizer",
+    "author": "Guided Practice",
+    "duration": "3 mins",
+    "content": "### 😌 The 4-7-8 Breath\nA simple pattern that gently downshifts the body toward rest.\n\n**Repeat four cycles:**\n- Inhale quietly through the nose for **4**.\n- Hold the breath for **7**.\n- Exhale fully through the mouth, lips pursed, for **8** (a soft whoosh).\n\nThe long exhale is the secret — it tells your body it is safe. Perfect after a tense stretch of work.",
+    "description": "A calming breath ratio to melt tension after focus.",
+    "searchUrl": "https://www.youtube.com/results?search_query=4-7-8%20breathing%20technique%20guided"
+  },
+  {
+    "id": "breathe-03",
+    "category": "breathing",
+    "categoryLabel": "🌬️ Breathe & Move",
+    "title": "The 20-20-20 Eye Rest",
+    "author": "Screen Wellness",
+    "duration": "2 mins",
+    "content": "### 👀 Rescue Your Eyes\nHours of screen work leave the eyes strained and the mind foggy. This rule from optometrists costs almost nothing.\n\n**The practice:**\nEvery 20 minutes, look at something **20 feet** away for **20 seconds**. Right now, glance out a window or across the room at the farthest point you can find. Blink slowly ten times.\n\nYour eyes are muscles too — let them stretch.",
+    "description": "A tiny practice to relieve screen-tired eyes.",
+    "searchUrl": "https://www.youtube.com/results?search_query=20-20-20%20rule%20eye%20strain"
+  },
+  {
+    "id": "breathe-04",
+    "category": "breathing",
+    "categoryLabel": "🌬️ Breathe & Move",
+    "title": "Desk Stretch — Unlock the Body",
+    "author": "Movement Break",
+    "duration": "4 mins",
+    "content": "### 🧘 Stand and Unlock\nSitting stiffens the body and dulls the mind. Give yourself four minutes of gentle movement.\n\n**Flow slowly through each:**\n1. Stand, reach both arms overhead, lengthen the spine — 3 breaths.\n2. Roll the shoulders back five times, then forward five times.\n3. Gently tilt the head ear-to-shoulder, each side — 3 breaths.\n4. Clasp hands behind the back, open the chest — 3 breaths.\n5. Twist gently left, then right, from the waist.\n\nSit back down taller, lighter, and clearer.",
+    "description": "A guided desk-side stretch to release built-up tension.",
+    "searchUrl": "https://www.youtube.com/results?search_query=desk%20stretch%20routine%20for%20office%20workers"
+  },
+  {
+    "id": "breathe-05",
+    "category": "breathing",
+    "categoryLabel": "🌬️ Breathe & Move",
+    "title": "One-Minute Grounding (5-4-3-2-1)",
+    "author": "Mindfulness Practice",
+    "duration": "2 mins",
+    "content": "### 🌍 Come Back to Now\nWhen the mind is scattered across a dozen worries, this sensory anchor pulls you gently back to the present.\n\n**Slowly notice:**\n- **5** things you can see.\n- **4** things you can feel (chair, floor, fabric, breath).\n- **3** things you can hear.\n- **2** things you can smell.\n- **1** thing you can taste, or one slow, grateful breath.\n\nThe present moment is the only place work actually gets done. Welcome back.",
+    "description": "A grounding sequence to gather a scattered mind.",
+    "searchUrl": "https://www.youtube.com/results?search_query=5-4-3-2-1%20grounding%20technique%20mindfulness"
   }
 ];
 

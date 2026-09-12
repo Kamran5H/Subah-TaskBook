@@ -10,6 +10,7 @@ class SubahRewards {
     this.timerRunning = false;
     this.selectedMinutes = 7;
     this.lastRewardId = null;
+    this.unboxTimeout = null;
 
     // DOM Elements
     this.modal = null;
@@ -104,6 +105,10 @@ class SubahRewards {
       });
     });
 
+    // Show the real library size on the "All" pill so it can never drift from the data.
+    const allPill = document.querySelector('.filter-pill-btn[data-category="all"]');
+    if (allPill) allPill.textContent = `All (${this.rewards.length})`;
+
     this.renderLibraryGrid("all");
   }
 
@@ -122,7 +127,7 @@ class SubahRewards {
       card.innerHTML = `
         <div class="reward-card-top">
           <span class="card-category-badge">${this.escapeHtml(item.categoryLabel || item.category.toUpperCase())}</span>
-          <span class="card-duration-badge">⏱️ ${item.duration || "5m"}</span>
+          <span class="card-duration-badge">⏱️ ${this.escapeHtml(item.duration || "5m")}</span>
         </div>
         <div>
           <h3 class="card-title-text">${this.escapeHtml(item.title)}</h3>
@@ -132,7 +137,7 @@ class SubahRewards {
           <span class="btn-play-card">
             ▶ Play / Open
           </span>
-          <span style="font-size: 11px; color: var(--text-muted);">${item.artist || item.author || ""}</span>
+          <span style="font-size: 11px; color: var(--text-muted);">${this.escapeHtml(item.artist || item.author || "")}</span>
         </div>
       `;
 
@@ -166,12 +171,18 @@ class SubahRewards {
       : null;
     let pool = this.rewards;
 
+    // Honour the user's enabled categories first...
+    if (enabledCats && enabledCats.length > 0) {
+      const catPool = this.rewards.filter(r => enabledCats.includes(r.category));
+      if (catPool.length > 0) pool = catPool;
+    }
+
+    // ...then, if offline, narrow to items that need no network (content cards).
+    // Combining both filters means an offline user still respects their category
+    // choices where possible instead of one filter silently overriding the other.
     if (isOffline) {
-      const offlinePool = this.rewards.filter(r => r.content);
+      const offlinePool = pool.filter(r => r.content);
       if (offlinePool.length > 0) pool = offlinePool;
-    } else if (enabledCats && enabledCats.length > 0) {
-      pool = this.rewards.filter(r => enabledCats.includes(r.category));
-      if (pool.length === 0) pool = this.rewards;
     }
 
     // Avoid repeating the exact same reward consecutively if possible
@@ -205,8 +216,12 @@ class SubahRewards {
       this.populateRewardData(reward);
       this.startTimer();
     } else {
-      // Auto unbox after 1.4 seconds of suspense
-      setTimeout(() => {
+      // Auto unbox after 1.4 seconds of suspense. Track the handle so closing the
+      // modal mid-suspense cancels it — otherwise it fired later on a hidden modal,
+      // playing a phantom chime and silently starting a break timer.
+      if (this.unboxTimeout) clearTimeout(this.unboxTimeout);
+      this.unboxTimeout = setTimeout(() => {
+        this.unboxTimeout = null;
         this.revealReward();
       }, 1400);
     }
@@ -214,6 +229,9 @@ class SubahRewards {
 
   revealReward() {
     if (!this.currentReward) return;
+    // Guard: never reveal into a closed modal (e.g. a stale unbox timer that raced
+    // the close button).
+    if (this.modal && !this.modal.classList.contains("active")) return;
     if (this.unboxingStage) this.unboxingStage.style.display = "none";
     if (this.rewardStage) this.rewardStage.classList.add("active");
 
@@ -434,6 +452,10 @@ class SubahRewards {
 
   closeModal() {
     this.stopTimer();
+    if (this.unboxTimeout) {
+      clearTimeout(this.unboxTimeout);
+      this.unboxTimeout = null;
+    }
     if (this.embedListener) {
       window.removeEventListener("message", this.embedListener);
       this.embedListener = null;

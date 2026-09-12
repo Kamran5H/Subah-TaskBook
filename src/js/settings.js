@@ -93,6 +93,9 @@ class SubahSettings {
       qawwali: "🎶 Qawwali",
       melody: "🎵 Peaceful Melody",
       mashwara: "💡 Mashwara / Advice",
+      reading: "📖 Thought to Ponder",
+      dua: "🤲 Dua & Zikr",
+      breathing: "🌬️ Breathe & Move",
       reel: "📱 Short Reel"
     };
 
@@ -150,7 +153,7 @@ class SubahSettings {
       row.innerHTML = `
         <div style="display: flex; flex-direction: column; gap: 2px;">
           <span style="font-weight: 700; color: #fff;">${this.escapeHtml(item.title)}</span>
-          <span style="font-size: 11px; color: var(--accent-gold); font-weight: 600;">${item.categoryLabel || item.category} • ${item.duration}</span>
+          <span style="font-size: 11px; color: var(--accent-gold); font-weight: 600;">${this.escapeHtml(item.categoryLabel || item.category)} • ${this.escapeHtml(item.duration)}</span>
         </div>
         <button class="btn-task-action delete" title="Delete from collection">✕</button>
       `;

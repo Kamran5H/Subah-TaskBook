@@ -102,7 +102,7 @@ function getDefaultState() {
       defaultTimerMinutes: 7,
       soundEnabled: true,
       openAtLogin: true,
-      enabledCategories: ["naat", "qawwali", "melody", "mashwara", "reading", "reel"]
+      enabledCategories: ["naat", "qawwali", "melody", "mashwara", "reading", "reel", "dua", "breathing"]
     },
     customRewards: []
   };

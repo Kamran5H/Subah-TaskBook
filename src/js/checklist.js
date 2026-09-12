@@ -210,7 +210,9 @@ class SubahChecklist {
     if (!text) return;
 
     const newTask = {
-      id: `task-${Date.now()}`,
+      // Random suffix guards against two adds (or an add + a planner save) landing
+      // in the same millisecond and minting a duplicate task id.
+      id: `task-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       text: text,
       completed: false,
       priority: "normal",

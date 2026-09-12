@@ -211,7 +211,11 @@ class SubahApp {
 
     const toast = document.createElement("div");
     toast.className = "toast";
-    toast.innerHTML = `<span>${message}</span>`;
+    // textContent, not innerHTML: toast messages can interpolate task text / dates,
+    // so never let them be parsed as markup.
+    const span = document.createElement("span");
+    span.textContent = message;
+    toast.appendChild(span);
 
     this.toastContainer.appendChild(toast);
 
