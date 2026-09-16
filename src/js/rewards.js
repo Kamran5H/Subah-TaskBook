@@ -52,6 +52,22 @@ class SubahRewards {
       backBtn.addEventListener("click", () => this.closeModal());
     }
 
+    // Dismiss modal on backdrop click
+    if (this.modal) {
+      this.modal.addEventListener("click", (e) => {
+        if (e.target === this.modal) {
+          this.closeModal();
+        }
+      });
+    }
+
+    // Dismiss modal on Escape key
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && this.modal && this.modal.classList.contains("active")) {
+        this.closeModal();
+      }
+    });
+
     // Open External in Browser button
     const externalBtn = document.getElementById("btn-open-in-browser");
     if (externalBtn) {
@@ -156,7 +172,14 @@ class SubahRewards {
 
   updateCustomRewards(customRewards = []) {
     const defaults = typeof DEFAULT_REWARDS !== "undefined" ? DEFAULT_REWARDS : [];
-    this.rewards = [...defaults, ...customRewards];
+    this.rewards = [...defaults, ...(customRewards || [])];
+
+    // Refresh the "All (N)" count badge and update library cards
+    const allPill = document.querySelector('.filter-pill-btn[data-category="all"]');
+    if (allPill) allPill.textContent = `All (${this.rewards.length})`;
+    const activeFilter = document.querySelector('.filter-pill-btn.active');
+    const cat = activeFilter ? activeFilter.getAttribute("data-category") : "all";
+    this.renderLibraryGrid(cat || "all");
   }
 
   getRandomReward() {
@@ -195,8 +218,18 @@ class SubahRewards {
   }
 
   presentSurpriseReward(task, isReplay = false) {
-    const reward = this.getRandomReward();
+    let reward = null;
+    if (isReplay && task && task.rewardId) {
+      reward = this.rewards.find(r => r.id === task.rewardId);
+    }
+    if (!reward) {
+      reward = this.getRandomReward();
+    }
     if (!reward) return;
+
+    if (task && !task.rewardId) {
+      task.rewardId = reward.id;
+    }
 
     this.currentReward = reward;
 
@@ -255,7 +288,26 @@ class SubahRewards {
     if (reward.youtubeId) {
       if (this.playerContainer) {
         this.playerContainer.style.display = "block";
-        this.renderYouTubePlayer(reward);
+        const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+        if (isOffline) {
+          const watchUrl = reward.externalUrl || reward.searchUrl;
+          this.playerContainer.innerHTML = `
+            <div class="embed-fallback-card">
+              <div class="embed-fallback-icon">📡</div>
+              <h3 class="embed-fallback-title">${this.escapeHtml(reward.title)}</h3>
+              <p class="embed-fallback-sub">
+                You are currently offline. Connect to the internet to stream this video, or enjoy offline readings.
+              </p>
+              <div class="embed-fallback-actions">
+                <button class="btn-glow-primary" id="btn-fallback-watch">▶ Open when online</button>
+              </div>
+            </div>
+          `;
+          const w = document.getElementById("btn-fallback-watch");
+          if (w) w.addEventListener("click", () => window.subahAPI.openExternal(watchUrl));
+        } else {
+          this.renderYouTubePlayer(reward);
+        }
       }
       if (this.readingContainer) {
         this.readingContainer.style.display = "none";
@@ -268,7 +320,31 @@ class SubahRewards {
       }
       if (this.readingContainer) {
         this.readingContainer.style.display = "block";
-        this.readingContainer.innerHTML = this.renderMarkdown(reward.content);
+        if (reward.category === "breathing") {
+          this.readingContainer.innerHTML = `
+            <div class="breathing-guide-card">
+              <div class="breathing-orb-container">
+                <div class="breathing-orb-glow"></div>
+                <div class="breathing-orb" id="breathing-orb-circle">
+                  <span class="breathing-phase-text" id="breathing-phase-label">Inhale...</span>
+                  <span class="breathing-timer-num" id="breathing-countdown">4</span>
+                </div>
+              </div>
+              <div class="breathing-controls-row">
+                <button class="btn-glow-primary" id="btn-toggle-breathing" style="padding: 7px 18px; font-size: 12.5px;">
+                  ⏸ Pause Exercise
+                </button>
+              </div>
+            </div>
+            <div class="breathing-text-content">
+              ${this.renderMarkdown(reward.content)}
+            </div>
+          `;
+          this.startBreathingGuide();
+        } else {
+          this.stopBreathingGuide();
+          this.readingContainer.innerHTML = this.renderMarkdown(reward.content);
+        }
       }
     } else {
       // General external link card
@@ -396,6 +472,9 @@ class SubahRewards {
     this.selectedMinutes = mins;
     this.timerSeconds = mins * 60;
     this.updateTimerDisplay();
+    if (!this.timerInterval && this.timerToggleBtn) {
+      this.timerToggleBtn.textContent = "▶ Start";
+    }
   }
 
   startTimer() {
@@ -417,6 +496,13 @@ class SubahRewards {
   }
 
   toggleTimer() {
+    if (!this.timerInterval) {
+      if (this.timerSeconds <= 0) {
+        this.timerSeconds = this.selectedMinutes * 60;
+      }
+      this.startTimer();
+      return;
+    }
     this.timerRunning = !this.timerRunning;
     if (this.timerToggleBtn) {
       this.timerToggleBtn.textContent = this.timerRunning ? "⏸ Pause" : "▶ Resume";
@@ -450,8 +536,66 @@ class SubahRewards {
     window.subahApp.showToast("🔔 Break time complete! Feel refreshed and energized for your next task.");
   }
 
+  startBreathingGuide() {
+    this.stopBreathingGuide();
+
+    const orb = (typeof document !== "undefined" && document.getElementById("breathing-orb-circle")) || this.breathingOrb;
+    const label = (typeof document !== "undefined" && document.getElementById("breathing-phase-label")) || this.breathingPhaseText;
+    const counter = (typeof document !== "undefined" && document.getElementById("breathing-countdown")) || this.breathingCounter;
+    const toggleBtn = (typeof document !== "undefined" && document.getElementById("btn-toggle-breathing")) || this.breathingToggleBtn;
+    if (!orb || !label || !counter) return;
+
+    // 4 phases of mindful box breathing (Inhale 4s -> Hold 4s -> Exhale 4s -> Hold 4s)
+    const phases = [
+      { name: "Inhale...", cls: "inhale", seconds: 4 },
+      { name: "Hold", cls: "hold", seconds: 4 },
+      { name: "Exhale...", cls: "exhale", seconds: 4 },
+      { name: "Hold", cls: "hold", seconds: 4 }
+    ];
+
+    let phaseIndex = 0;
+    let secondsLeft = phases[0].seconds;
+    this.breathingRunning = true;
+
+    const applyPhase = () => {
+      const p = phases[phaseIndex];
+      orb.className = `breathing-orb ${p.cls}`;
+      label.textContent = p.name;
+      counter.textContent = secondsLeft;
+    };
+
+    applyPhase();
+
+    this.breathingInterval = setInterval(() => {
+      if (!this.breathingRunning) return;
+      secondsLeft--;
+      if (secondsLeft <= 0) {
+        phaseIndex = (phaseIndex + 1) % phases.length;
+        secondsLeft = phases[phaseIndex].seconds;
+      }
+      applyPhase();
+    }, 1000);
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener("click", () => {
+        this.breathingRunning = !this.breathingRunning;
+        toggleBtn.textContent = this.breathingRunning ? "⏸ Pause Exercise" : "▶ Resume Exercise";
+        window.subahAudio.playClick();
+      });
+    }
+  }
+
+  stopBreathingGuide() {
+    if (this.breathingInterval) {
+      clearInterval(this.breathingInterval);
+      this.breathingInterval = null;
+    }
+    this.breathingRunning = false;
+  }
+
   closeModal() {
     this.stopTimer();
+    this.stopBreathingGuide();
     if (this.unboxTimeout) {
       clearTimeout(this.unboxTimeout);
       this.unboxTimeout = null;
@@ -476,9 +620,10 @@ class SubahRewards {
       .replace(/^## (.*$)/gim, "<h2>$1</h2>")
       .replace(/^# (.*$)/gim, "<h1>$1</h1>")
       .replace(/^\> (.*$)/gim, "<blockquote>$1</blockquote>")
-      .replace(/\*\*(.*)\*\*/gim, "<strong>$1</strong>")
-      .replace(/\*(.*)\*/gim, "<em>$1</em>")
-      .replace(/\n$/gim, "<br />");
+      .replace(/\*\*(.*?)\*\*/gim, "<strong>$1</strong>")
+      .replace(/\*(.*?)\*/gim, "<em>$1</em>")
+      .replace(/\n\n/g, "<br /><br />")
+      .replace(/\n/g, "<br />");
     return html;
   }
 

@@ -198,6 +198,90 @@
   color: var(--text-muted);
 }
 
+/* Filter Bar */
+.checklist-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 2px 0;
+}
+
+.checklist-filter-pill {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 5px 13px;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.checklist-filter-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.checklist-filter-pill.active {
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+}
+
+/* All Done Celebration Banner */
+.checklist-all-done-banner {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(52, 211, 153, 0.12) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+  animation: glowPulse 2.5s infinite alternate;
+}
+
+@keyframes glowPulse {
+  0% { box-shadow: 0 4px 16px rgba(245, 158, 11, 0.12); }
+  100% { box-shadow: 0 8px 30px rgba(245, 158, 11, 0.28); }
+}
+
+.all-done-icon {
+  font-size: 28px;
+  filter: drop-shadow(0 0 8px #f59e0b);
+}
+
+.all-done-text {
+  flex: 1;
+}
+
+.all-done-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 2px;
+}
+
+.all-done-sub {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+
+.all-done-btn {
+  padding: 9px 18px;
+  font-size: 12.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 /* Task Items Container */
 .task-items-container {
   display: flex;
@@ -228,9 +312,29 @@
   transform: translateX(2px);
 }
 
+.task-item-card.pinned {
+  border-color: rgba(245, 158, 11, 0.5);
+  border-left: 3.5px solid #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.11) 0%, var(--surface-1) 100%);
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.14), inset 0 0 12px rgba(245, 158, 11, 0.05);
+}
+
+.task-item-card.pinned:hover {
+  border-color: rgba(245, 158, 11, 0.7);
+  border-left: 3.5px solid #fbbf24;
+  box-shadow: 0 6px 24px rgba(245, 158, 11, 0.22), inset 0 0 14px rgba(245, 158, 11, 0.08);
+}
+
 .task-item-card.completed {
   background: rgba(52, 211, 153, 0.04);
   border-color: rgba(52, 211, 153, 0.18);
+}
+
+.task-item-card.pinned.completed {
+  border-color: rgba(245, 158, 11, 0.25);
+  border-left: 3.5px solid rgba(245, 158, 11, 0.4);
+  background: rgba(18, 24, 38, 0.45);
+  box-shadow: none;
 }
 
 .task-left-section {
@@ -321,6 +425,22 @@
   border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 0.3px;
+  cursor: pointer;
+  user-select: none;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.priority-tag:hover {
+  filter: brightness(1.25);
+}
+
+.priority-tag:active {
+  transform: scale(0.94);
+}
+
+.priority-tag:focus-visible {
+  outline: 2px solid var(--border-accent, #38bdf8);
+  outline-offset: 1px;
 }
 
 .priority-tag.high {
@@ -334,6 +454,20 @@
 .priority-tag.low {
   background: rgba(148, 163, 184, 0.14);
   color: #94a3b8;
+}
+
+.pinned-tag-pill {
+  font-size: 10px;
+  font-weight: 700;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.16);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 1px 7px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  letter-spacing: 0.3px;
 }
 
 .reward-claimed-pill {
@@ -381,7 +515,34 @@
   color: var(--text-primary);
 }
 
+.btn-task-action.pin:hover {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.btn-task-action.pin.active {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.18);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+}
+
+.btn-task-action.pin.active:hover {
+  background: rgba(245, 158, 11, 0.28);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.5);
+}
+
+.btn-task-action.edit:hover {
+  color: var(--accent-cyan);
+  background: rgba(56, 189, 248, 0.14);
+}
+
+.btn-task-action.defer:hover {
+  color: var(--accent-gold);
+  background: rgba(245, 158, 11, 0.15);
+}
+
 .btn-task-action.delete:hover {
   background: rgba(244, 63, 94, 0.15);
   color: var(--accent-rose);
 }
+

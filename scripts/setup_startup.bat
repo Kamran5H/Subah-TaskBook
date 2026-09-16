@@ -10,7 +10,11 @@ echo.
 set "TARGET_DIR=%~dp0.."
 set "STARTUP_FOLDER=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
 set "SHORTCUT_PATH=%STARTUP_FOLDER%\Subah-TaskBook.lnk"
-set "DESKTOP_SHORTCUT=%USERPROFILE%\OneDrive\Desktop\Subah.lnk"
+
+REM Detect actual Desktop folder (works with or without OneDrive redirection)
+for /f "usebackq delims=" %%D in (`powershell -NoProfile -Command "[Environment]::GetFolderPath('Desktop')"`) do set "USER_DESKTOP=%%D"
+if not defined USER_DESKTOP set "USER_DESKTOP=%USERPROFILE%\Desktop"
+set "DESKTOP_SHORTCUT=%USER_DESKTOP%\Subah.lnk"
 set "EXE_PATH=%~dp0..\dist\Subah-win32-x64\Subah.exe"
 
 REM Remove rogue electron.app.Electron entry from Windows Run registry
@@ -31,13 +35,13 @@ echo Creating Windows Startup shortcut in:
 echo "%SHORTCUT_PATH%"
 echo.
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT_PATH%'); $s.TargetPath = '%TARGET_EXE%'; if ('%TARGET_ARGS%') { $s.Arguments = '%TARGET_ARGS%' }; $s.WorkingDirectory = '%TARGET_DIR%'; $s.Save()"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT_PATH%'); $s.TargetPath = '%TARGET_EXE%'; if ('%TARGET_ARGS%') { $s.Arguments = '%TARGET_ARGS%' }; $s.WorkingDirectory = '%TARGET_DIR%'; $s.IconLocation = '%TARGET_DIR%\assets\icon.ico,0'; $s.Save()"
 
 echo Creating Desktop shortcut on your Desktop:
 echo "%DESKTOP_SHORTCUT%"
 echo.
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%DESKTOP_SHORTCUT%'); $s.TargetPath = '%TARGET_EXE%'; if ('%TARGET_ARGS%') { $s.Arguments = '%TARGET_ARGS%' }; $s.WorkingDirectory = '%TARGET_DIR%'; $s.Save()"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%DESKTOP_SHORTCUT%'); $s.TargetPath = '%TARGET_EXE%'; if ('%TARGET_ARGS%') { $s.Arguments = '%TARGET_ARGS%' }; $s.WorkingDirectory = '%TARGET_DIR%'; $s.IconLocation = '%TARGET_DIR%\assets\icon.ico,0'; $s.Save()"
 
 echo.
 echo [SUCCESS] Subah startup configuration refreshed cleanly!

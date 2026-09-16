@@ -118,6 +118,11 @@ class SubahAudio {
     shimmer.stop(now + 2.1);
   }
 
+  // Alias for playCelebration
+  playFanfare() {
+    this.playCelebration();
+  }
+
   // Singing bowl / Tibetan bell when 5-10 min break is finished
   playTimerBell() {
     if (!this.enabled) return;

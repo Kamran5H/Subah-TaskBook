@@ -4,6 +4,7 @@
 class SubahDiary {
   constructor() {
     this.tasksByDate = {};
+    this.reflectionsByDate = {};
     this.todayDate = "";
     this.streak = 1;
     this.currentFilter = "all"; // 'all' | 'completed' | 'pending'
@@ -19,8 +20,9 @@ class SubahDiary {
     this.statStreakEl = null;
   }
 
-  init(tasksByDate = {}, todayDate = "", streak = 1) {
+  init(tasksByDate = {}, todayDate = "", streak = 1, reflectionsByDate = {}) {
     this.tasksByDate = tasksByDate || {};
+    this.reflectionsByDate = reflectionsByDate || {};
     this.todayDate = todayDate || this.getTodayDateString();
     this.streak = streak || 1;
 
@@ -41,7 +43,7 @@ class SubahDiary {
     }
 
     // Filter Button Listeners
-    this.filterButtons = document.querySelectorAll(".diary-filter-btn");
+    this.filterButtons = document.querySelectorAll(".diary-filter-btn:not(.export-md)");
     this.filterButtons.forEach(btn => {
       btn.addEventListener("click", (e) => {
         this.filterButtons.forEach(b => b.classList.remove("active"));
@@ -51,11 +53,18 @@ class SubahDiary {
       });
     });
 
+    // Export Markdown Button Listener
+    const exportBtn = document.getElementById("btn-diary-export-md");
+    if (exportBtn) {
+      exportBtn.addEventListener("click", () => this.exportAllMarkdown());
+    }
+
     this.render();
   }
 
-  updateData(tasksByDate, todayDate, streak) {
+  updateData(tasksByDate, todayDate, streak, reflectionsByDate) {
     if (tasksByDate) this.tasksByDate = tasksByDate;
+    if (reflectionsByDate) this.reflectionsByDate = reflectionsByDate;
     if (todayDate) this.todayDate = todayDate;
     if (typeof streak === "number") this.streak = streak;
     this.render();
@@ -119,7 +128,8 @@ class SubahDiary {
         year: "numeric"
       });
       const formatted = formatter.format(dateObj).trim();
-      return formatted.endsWith("AH") ? formatted : `${formatted} AH`;
+      const clean = formatted.replace(/\.+$/, "").trim();
+      return /\bAH\b/i.test(clean) ? clean : `${clean} AH`;
     } catch (_) {
       return "";
     }
@@ -168,7 +178,7 @@ class SubahDiary {
         <div class="diary-empty-state">
           <div class="diary-empty-icon">📖</div>
           <h3 class="diary-empty-title">Your Diary is Waiting</h3>
-          <p style="font-size: 13px;">Add goals in Today's Tasks or the Journal Planner to begin your daily record.</p>
+          <p style="font-size: 13px;">Add goals in Today's Tasks or the Schedule Calendar to begin your daily record.</p>
         </div>
       `;
       return;
@@ -251,6 +261,8 @@ class SubahDiary {
         progressBadgeText = `${dayCompletedDirect} on Day • ${dayResolvedLater} Later (${dayPct}%)`;
       }
 
+      const reflectionText = (this.reflectionsByDate && this.reflectionsByDate[dateStr]) || "";
+
       dayCard.innerHTML = `
         <div class="diary-day-header">
           <div class="diary-date-group">
@@ -267,6 +279,20 @@ class SubahDiary {
           </div>
         </div>
         <div class="diary-tasks-list"></div>
+        <div class="diary-reflection-box" data-date="${dateStr}">
+          <div class="diary-reflection-header">
+            <span class="diary-reflection-label">💭 Daily Reflection & Gratitude</span>
+            <button class="diary-btn-toggle-reflection" data-date="${dateStr}">
+              ${reflectionText ? '✎ Edit Reflection' : '＋ Add Reflection'}
+            </button>
+          </div>
+          <div class="diary-reflection-body" style="${reflectionText ? 'display: flex;' : 'display: none;'}">
+            <textarea class="diary-reflection-textarea" placeholder="What are you grateful for today? Insights, moments of peace, or lessons learned...">${this.escapeHtml(reflectionText)}</textarea>
+            <div class="diary-reflection-actions">
+              <button class="diary-btn-save-reflection" data-date="${dateStr}">Save Reflection</button>
+            </div>
+          </div>
+        </div>
         <div class="diary-day-actions">
           <div class="diary-inline-add-row" style="display: none;">
             <input type="text" class="diary-inline-add-input" placeholder="Add a new goal for this day (Press Enter)..." />
@@ -281,6 +307,30 @@ class SubahDiary {
       const copyBtn = dayCard.querySelector(".diary-btn-copy-day");
       if (copyBtn) {
         copyBtn.addEventListener("click", () => this.copyDayJournal(dateStr));
+      }
+
+      // Daily Reflection Handlers
+      const reflBox = dayCard.querySelector(".diary-reflection-box");
+      if (reflBox) {
+        const toggleReflBtn = reflBox.querySelector(".diary-btn-toggle-reflection");
+        const reflBody = reflBox.querySelector(".diary-reflection-body");
+        const reflTextarea = reflBox.querySelector(".diary-reflection-textarea");
+        const saveReflBtn = reflBox.querySelector(".diary-btn-save-reflection");
+
+        if (toggleReflBtn && reflBody) {
+          toggleReflBtn.addEventListener("click", () => {
+            const isHidden = reflBody.style.display === "none";
+            reflBody.style.display = isHidden ? "flex" : "none";
+            if (isHidden && reflTextarea) reflTextarea.focus();
+          });
+        }
+
+        if (saveReflBtn && reflTextarea) {
+          saveReflBtn.addEventListener("click", async () => {
+            const val = reflTextarea.value.trim();
+            await this.saveDailyReflection(dateStr, val);
+          });
+        }
       }
 
       // Add Task Inline Handler
@@ -366,7 +416,7 @@ class SubahDiary {
               </svg>
             </button>
             <div class="diary-task-info-wrap">
-              <span class="diary-task-text" title="Double click to edit">${this.escapeHtml(task.text)}</span>
+              <span class="diary-task-text" title="Double click to edit">${this.highlightText(task.text)}</span>
               <div class="diary-tags-row">
                 <span class="priority-tag ${task.priority || 'normal'}">${priorityLabel}</span>
                 ${task.carriedOverFrom ? `<span class="diary-carried-pill">🔄 Carried from ${task.carriedOverFrom}</span>` : ''}
@@ -596,6 +646,9 @@ class SubahDiary {
         if (res && res.success && typeof res.streak === "number") {
           this.streak = res.streak;
         }
+        if (window.subahApp && typeof window.subahApp.onTasksUpdated === "function") {
+          window.subahApp.onTasksUpdated(dateStr, tasks, this.streak);
+        }
       }
     } catch (e) {
       console.error("Failed to persist date tasks from diary:", e);
@@ -606,7 +659,7 @@ class SubahDiary {
     const dates = Object.keys(this.tasksByDate || {});
     const uniqueOriginIds = new Set();
     const uniqueTaskTexts = new Set();
-    let totalCompleted = 0;
+    const completedOriginKeys = new Set();
     let activeDays = 0;
 
     dates.forEach(d => {
@@ -614,18 +667,20 @@ class SubahDiary {
       if (Array.isArray(tasks) && tasks.length > 0) {
         activeDays++;
         tasks.forEach(t => {
+          if (!t || typeof t !== "object") return;
           const origKey = t.originalTaskId || t.id;
           const textKey = (t.text || "").toLowerCase().trim();
           uniqueOriginIds.add(origKey);
           if (textKey) uniqueTaskTexts.add(textKey);
 
           if (t.completed) {
-            totalCompleted++;
+            completedOriginKeys.add(origKey);
           }
         });
       }
     });
 
+    const totalCompleted = completedOriginKeys.size;
     const uniqueTotal = Math.max(totalCompleted, uniqueOriginIds.size);
     const ratePct = uniqueTotal === 0 ? 0 : Math.min(100, Math.round((totalCompleted / uniqueTotal) * 100));
 
@@ -633,6 +688,82 @@ class SubahDiary {
     if (this.statTasksEl) this.statTasksEl.textContent = `${totalCompleted} Done`;
     if (this.statRateEl) this.statRateEl.textContent = `${ratePct}%`;
     if (this.statStreakEl) this.statStreakEl.textContent = `${this.streak} Day${this.streak !== 1 ? 's' : ''}`;
+  }
+
+  highlightText(text) {
+    if (!text) return "";
+    const escaped = this.escapeHtml(text);
+    if (!this.searchQuery) return escaped;
+    const q = this.escapeHtml(this.searchQuery);
+    const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "gi");
+    return escaped.replace(re, `<mark class="diary-search-highlight">$1</mark>`);
+  }
+
+  async saveDailyReflection(dateStr, text) {
+    if (!this.reflectionsByDate) this.reflectionsByDate = {};
+    this.reflectionsByDate[dateStr] = text;
+    if (window.subahAPI && typeof window.subahAPI.saveReflection === "function") {
+      await window.subahAPI.saveReflection({ date: dateStr, text });
+    }
+    if (window.subahAudio && typeof window.subahAudio.playClick === "function") {
+      window.subahAudio.playClick();
+    }
+    this.render();
+    if (window.subahApp && typeof window.subahApp.showToast === "function") {
+      window.subahApp.showToast("Daily reflection saved 💭");
+    }
+  }
+
+  async exportAllMarkdown() {
+    const allDates = Object.keys(this.tasksByDate || {}).sort((a, b) => b.localeCompare(a));
+    if (allDates.length === 0) {
+      if (window.subahApp) window.subahApp.showToast("No diary entries to export yet.");
+      return;
+    }
+
+    let md = `# 📖 Subah Life & Focus Diary\n\n`;
+    md += `**Export Date:** ${new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}\n`;
+    md += `**Current Streak:** ${this.streak} days\n\n---\n\n`;
+
+    allDates.forEach(d => {
+      const tasks = this.tasksByDate[d] || [];
+      if (tasks.length === 0) return;
+      const { prefix, fullDate } = this.formatDateHeading(d);
+      const hijri = this.getHijriDate(d);
+      const completedCount = tasks.filter(t => t.completed).length;
+      const pct = Math.round((completedCount / tasks.length) * 100);
+
+      md += `## ${fullDate}${prefix ? ` (${prefix})` : ""}\n`;
+      if (hijri) md += `*🌙 ${hijri}*\n\n`;
+      md += `**Progress:** ${completedCount} of ${tasks.length} tasks completed (${pct}%)\n\n`;
+
+      tasks.forEach(t => {
+        const icon = t.completed ? "[x]" : "[ ]";
+        const pri = t.priority === "high" ? " 🔥 [HIGH]" : (t.priority === "low" ? " [LOW]" : "");
+        const time = t.completedAt ? ` *(Completed ${this.formatTime(t.completedAt)})*` : "";
+        const carried = t.carriedOverFrom ? ` *(Carried from ${t.carriedOverFrom})*` : "";
+        md += `- ${icon} ${t.text}${pri}${time}${carried}\n`;
+      });
+
+      const refl = this.reflectionsByDate && this.reflectionsByDate[d];
+      if (refl) {
+        md += `\n> **Daily Reflection:**\n> ${refl.replace(/\n/g, "\n> ")}\n`;
+      }
+      md += `\n---\n\n`;
+    });
+
+    try {
+      await navigator.clipboard.writeText(md);
+      window.subahAudio.playChime();
+      if (window.subahApp) {
+        window.subahApp.showToast("📋 Full Diary exported to clipboard as Markdown!");
+      }
+    } catch (err) {
+      console.error("Clipboard copy failed:", err);
+      if (window.subahApp) {
+        window.subahApp.showToast("Failed to copy to clipboard.");
+      }
+    }
   }
 
   escapeHtml(str) {

@@ -1,0 +1,482 @@
+/* Schedule & Calendar Tab Styles for Subah Task Book */
+/* Adheres strictly to tab visibility rules - NO display property on #tab-schedule */
+
+#tab-schedule {
+  width: 100%;
+  height: 100%;
+}
+
+.schedule-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 16px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Two-Column Grid Layout */
+.schedule-grid-container {
+  display: grid;
+  grid-template-columns: 370px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .schedule-grid-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Left Column: Calendar Panel */
+.schedule-calendar-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Month & Year Navigation Bar */
+.calendar-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.calendar-month-year {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+}
+
+.calendar-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-cal-nav {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  font-size: 13px;
+}
+
+.btn-cal-nav:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--border-accent);
+  color: var(--accent-cyan);
+}
+
+.btn-cal-today {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--accent-cyan);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.btn-cal-today:hover {
+  background: rgba(56, 189, 248, 0.22);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+
+/* Calendar Weekday Names */
+.calendar-weekdays-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  gap: 4px;
+}
+
+.calendar-weekday-col {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  padding: 4px 0;
+}
+
+/* Calendar Days Grid */
+.calendar-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.calendar-day-cell {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 4px 5px 4px;
+  cursor: pointer;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  user-select: none;
+}
+
+.calendar-day-cell:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: scale(1.05);
+}
+
+.calendar-day-cell .day-number {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.calendar-day-cell.other-month {
+  opacity: 0.28;
+}
+
+.calendar-day-cell.other-month:hover {
+  opacity: 0.6;
+}
+
+/* Today Cell Highlight */
+.calendar-day-cell.is-today {
+  border-color: var(--accent-cyan);
+  background: rgba(56, 189, 248, 0.08);
+  box-shadow: inset 0 0 10px rgba(56, 189, 248, 0.12);
+}
+
+.calendar-day-cell.is-today .day-number {
+  color: var(--accent-cyan);
+  font-weight: 700;
+}
+
+/* Selected Cell Highlight */
+.calendar-day-cell.is-selected {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.26), rgba(16, 185, 129, 0.22));
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.35), inset 0 0 8px rgba(255, 255, 255, 0.1);
+}
+
+.calendar-day-cell.is-selected .day-number {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* Dot Indicators */
+.day-indicators-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 6px;
+  min-height: 6px;
+}
+
+.calendar-task-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  box-shadow: 0 0 5px rgba(56, 189, 248, 0.6);
+}
+
+.calendar-task-dot.pinned {
+  background: var(--accent-gold);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.8);
+}
+
+.calendar-task-dot.pending {
+  background: #34d399;
+  box-shadow: 0 0 5px rgba(52, 211, 153, 0.6);
+}
+
+.calendar-task-dot.completed {
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: none;
+}
+
+/* Quick Presets & Manual Date Picker */
+.calendar-tools-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.schedule-preset-chips-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.schedule-preset-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.schedule-preset-chip:hover {
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: var(--accent-cyan);
+}
+
+.schedule-manual-date-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.schedule-manual-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.schedule-manual-date-input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-subtle);
+  color: #ffffff;
+  padding: 5px 9px;
+  border-radius: 6px;
+  font-size: 12px;
+  outline: none;
+  font-family: inherit;
+  flex: 1;
+  transition: border-color 0.16s ease;
+}
+
+.schedule-manual-date-input:focus {
+  border-color: var(--border-accent);
+}
+
+/* Right Column: Selected Day Tasks Panel */
+.schedule-tasks-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 480px;
+}
+
+.schedule-day-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.schedule-day-title-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.schedule-day-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.schedule-day-subtitle {
+  font-size: 12px;
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.schedule-day-counter-pill {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+/* Schedule Add Task Form */
+.schedule-add-task-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  transition: border-color 0.18s ease;
+}
+
+.schedule-add-task-bar:focus-within {
+  border-color: var(--border-accent);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+}
+
+.schedule-add-task-input {
+  flex: 1 1 180px;
+  min-width: 140px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 13.5px;
+  padding: 6px 8px;
+  outline: none;
+  font-family: inherit;
+}
+
+.schedule-add-task-input::placeholder {
+  color: var(--text-muted);
+}
+
+.schedule-priority-select {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+}
+
+.schedule-priority-select option {
+  background: #111827;
+  color: #ffffff;
+}
+
+.schedule-pin-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.04);
+  transition: all 0.16s ease;
+}
+
+.schedule-pin-toggle-label:hover {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+.schedule-pin-toggle-label:has(input:checked) {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #fbbf24;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+}
+
+.schedule-pin-toggle-label input[type="checkbox"] {
+  accent-color: #f59e0b;
+  cursor: pointer;
+}
+
+.btn-schedule-submit {
+  background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.btn-schedule-submit:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+/* Tasks List Container */
+.schedule-tasks-list-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Empty State */
+.schedule-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-muted);
+  gap: 8px;
+}
+
+.schedule-empty-icon {
+  font-size: 36px;
+  margin-bottom: 4px;
+}
+
+.schedule-empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.schedule-empty-desc {
+  font-size: 13px;
+  max-width: 380px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.btn-task-action.move-today:hover {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.15);
+}
+

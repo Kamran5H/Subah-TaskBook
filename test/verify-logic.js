@@ -2,6 +2,7 @@
 const assert = require("assert");
 const fs = require("fs");
 const path = require("path");
+const ROOT = path.join(__dirname, "..");
 
 console.log("=========================================");
 console.log("   RUNNING SUBAH TASK BOOK LOGIC TESTS   ");
@@ -274,6 +275,72 @@ assert(completionByOriginId.has("t-1"), "t-1 must be indexed as completed downst
 assert.strictEqual(completionByOriginId.get("t-1").resolvedDate, "2026-09-02");
 console.log("✓ SubahDiary downstream completion resolution verified (carried tasks resolve cleanly).");
 
+// 12. Test Pinned Tasks Sorting Algorithm
+const checklistSrc = fs.readFileSync(path.join(srcJsDir, "checklist.js"), "utf-8");
+const checklistContext = {
+  window: {},
+  document: { getElementById: () => null },
+  Date, Math, Array, console
+};
+vm.createContext(checklistContext);
+vm.runInContext(checklistSrc, checklistContext);
+const checklist = checklistContext.window.subahChecklist;
+assert(checklist, "window.subahChecklist must be instantiated");
+
+checklist.tasks = [
+  { id: "1", text: "Normal unpinned", priority: "normal", completed: false, pinned: false },
+  { id: "2", text: "High unpinned", priority: "high", completed: false, pinned: false },
+  { id: "3", text: "Normal pinned", priority: "normal", completed: false, pinned: true },
+  { id: "4", text: "High pinned", priority: "high", completed: false, pinned: true },
+  { id: "5", text: "Completed pinned", priority: "high", completed: true, pinned: true },
+  { id: "6", text: "Completed unpinned", priority: "normal", completed: true, pinned: false }
+];
+checklist.sortByPriority();
+// Expected priority:
+// 1st: "4" (High pinned)
+// 2nd: "3" (Normal pinned)
+// 3rd: "2" (High unpinned)
+// 4th: "1" (Normal unpinned)
+// 5th: "5" (Completed pinned - stays in completed section)
+// 6th: "6" (Completed unpinned)
+assert.deepStrictEqual(
+  checklist.tasks.map(t => t.id),
+  ["4", "3", "2", "1", "5", "6"],
+  "Pinned pending tasks must sort above unpinned tasks while completed stay at bottom"
+);
+console.log("✓ Pinned task prioritization verified (pinned tasks bubble to top, completed drop below).");
+
+// 13. Test Rollover Preserving Pinned Status
+const rolloverTestData = {
+  tasksByDate: {
+    "2026-09-10": [
+      { id: "p-1", text: "Pinned goal", priority: "high", completed: false, pinned: true }
+    ]
+  }
+};
+rollOverPendingTasks(rolloverTestData, "2026-09-11");
+assert(rolloverTestData.tasksByDate["2026-09-11"], "Rolled over tasks array must exist");
+assert.strictEqual(
+  rolloverTestData.tasksByDate["2026-09-11"][0].pinned,
+  true,
+  "Carried task must preserve pinned: true across date rollover"
+);
+console.log("✓ Rollover task pinned preservation verified.");
+
+// 14. Test Schedule Tab & Calendar Integration
+const scheduleSrc = fs.readFileSync(path.join(srcJsDir, "schedule.js"), "utf-8");
+assert(scheduleSrc.includes("class SubahSchedule"), "schedule.js must declare SubahSchedule class");
+assert(scheduleSrc.includes("window.subahSchedule = new SubahSchedule()"), "schedule.js must instantiate window.subahSchedule");
+
+const indexHtml = fs.readFileSync(path.join(ROOT, "src", "index.html"), "utf-8");
+assert(indexHtml.includes('data-tab="schedule"'), "index.html must include data-tab='schedule'");
+assert(indexHtml.includes('id="tab-schedule"'), "index.html must include id='tab-schedule'");
+assert(indexHtml.includes('styles/schedule.css'), "index.html must link styles/schedule.css");
+assert(indexHtml.includes('js/schedule.js'), "index.html must load js/schedule.js");
+assert(!indexHtml.includes('data-tab="planner"'), "index.html must not contain old planner tab button");
+assert(!indexHtml.includes('id="tab-planner"'), "index.html must not contain old tab-planner section");
+console.log("✓ Schedule Tab and Calendar navigation verified (Journal Planner replaced).");
+
 console.log("\n=========================================");
-console.log("      ALL 11 CORE LOGIC TESTS PASSED!    ");
+console.log("      ALL 14 CORE LOGIC TESTS PASSED!    ");
 console.log("=========================================\n");

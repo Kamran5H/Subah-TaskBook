@@ -56,10 +56,12 @@ class SubahApp {
 
     // Initialize Sub-modules
     window.subahChecklist.init();
-    window.subahPlanner.init();
+    if (window.subahSchedule) {
+      window.subahSchedule.init(this.appData.tasksByDate || {}, this.todayDate);
+    }
     window.subahRewards.init(this.appData.customRewards || []);
     if (window.subahDiary) {
-      window.subahDiary.init(this.appData.tasksByDate || {}, this.todayDate, this.appData.streak || 1);
+      window.subahDiary.init(this.appData.tasksByDate || {}, this.todayDate, this.appData.streak || 1, this.appData.reflectionsByDate || {});
     }
     window.subahSettings.init(this.appData.settings, this.appData.customRewards || []);
 
@@ -81,15 +83,8 @@ class SubahApp {
     window.addEventListener("focus", () => this.checkDateRollover());
     setInterval(() => this.checkDateRollover(), 60000);
 
-    // If today has 0 tasks, open the planner tab with a welcoming gentle chime
-    if (todayTasks.length === 0) {
-      this.switchTab("planner");
-      setTimeout(() => {
-        window.subahAudio.playChime();
-      }, 350);
-    } else {
-      this.switchTab("checklist");
-    }
+    // Default to Today's Tasks
+    this.switchTab("checklist");
   }
 
   onTasksUpdated(date, tasks, streak) {
@@ -99,7 +94,41 @@ class SubahApp {
     if (typeof streak === "number") this.appData.streak = streak;
 
     if (window.subahDiary) {
-      window.subahDiary.updateData(this.appData.tasksByDate, this.todayDate, this.appData.streak || 1);
+      window.subahDiary.updateData(this.appData.tasksByDate, this.todayDate, this.appData.streak || 1, this.appData.reflectionsByDate || {});
+    }
+    if (window.subahSchedule) {
+      window.subahSchedule.updateData(this.appData.tasksByDate, this.todayDate);
+    }
+    if (date === this.todayDate && window.subahChecklist && window.subahChecklist.tasks !== tasks) {
+      window.subahChecklist.setData(this.todayDate, tasks, this.appData.streak || 1);
+    }
+  }
+
+  async reloadAppState() {
+    this.appData = await window.subahAPI.getAppState();
+    this.todayDate = this.appData.todayDate;
+    const savedTheme = (this.appData.settings && this.appData.settings.theme) || "midnight-aurora";
+    document.body.setAttribute("data-theme", savedTheme);
+    if (this.appData.settings && typeof this.appData.settings.soundEnabled === "boolean") {
+      window.subahAudio.setEnabled(this.appData.settings.soundEnabled);
+    }
+    this.renderDates();
+    this.renderInspirationQuote();
+
+    const todayTasks = (this.appData.tasksByDate && this.appData.tasksByDate[this.todayDate]) || [];
+    window.subahChecklist.setData(this.todayDate, todayTasks, this.appData.streak || 1);
+
+    if (window.subahSchedule) {
+      window.subahSchedule.updateData(this.appData.tasksByDate || {}, this.todayDate);
+    }
+    if (window.subahRewards) {
+      window.subahRewards.init(this.appData.customRewards || []);
+    }
+    if (window.subahDiary) {
+      window.subahDiary.updateData(this.appData.tasksByDate || {}, this.todayDate, this.appData.streak || 1, this.appData.reflectionsByDate || {});
+    }
+    if (window.subahSettings) {
+      window.subahSettings.init(this.appData.settings, this.appData.customRewards || []);
     }
   }
 
@@ -120,11 +149,10 @@ class SubahApp {
       window.subahChecklist.setData(this.todayDate, todayTasks, this.appData.streak || 1);
 
       if (window.subahDiary) {
-        window.subahDiary.updateData(this.appData.tasksByDate, this.todayDate, this.appData.streak || 1);
+        window.subahDiary.updateData(this.appData.tasksByDate, this.todayDate, this.appData.streak || 1, this.appData.reflectionsByDate || {});
       }
-
-      if (todayTasks.length === 0) {
-        this.switchTab("planner");
+      if (window.subahSchedule) {
+        window.subahSchedule.updateData(this.appData.tasksByDate, this.todayDate);
       }
     }
   }
@@ -151,10 +179,9 @@ class SubahApp {
       targetScreen.classList.add("active");
     }
 
-    // Auto-focus if switching to planner
-    if (tabName === "planner") {
-      const textarea = document.getElementById("planner-textarea");
-      if (textarea) setTimeout(() => textarea.focus(), 150);
+    // Refresh schedule when switching to schedule tab
+    if (tabName === "schedule" && window.subahSchedule) {
+      window.subahSchedule.onOpen();
     }
 
     // Refresh diary when switching to diary tab

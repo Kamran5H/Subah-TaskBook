@@ -41,6 +41,44 @@ class SubahSettings {
       });
     }
 
+    // Sound test button
+    const btnTestSound = document.getElementById("btn-test-sound");
+    if (btnTestSound) {
+      btnTestSound.addEventListener("click", () => {
+        if (window.subahAudio) {
+          const wasEnabled = window.subahAudio.enabled;
+          window.subahAudio.setEnabled(true);
+          window.subahAudio.playChime();
+          if (!wasEnabled) {
+            setTimeout(() => window.subahAudio.setEnabled(false), 2000);
+            window.subahApp.showToast("🔔 Acoustic chime preview (sounds currently muted)");
+          } else {
+            window.subahApp.showToast("🔔 Acoustic chime played");
+          }
+        }
+      });
+    }
+
+    // Export Backup JSON
+    const btnExport = document.getElementById("btn-export-backup");
+    if (btnExport) {
+      btnExport.addEventListener("click", () => this.handleExportBackup());
+    }
+
+    // Import Backup JSON
+    const btnImportTrigger = document.getElementById("btn-import-backup-trigger");
+    const fileInput = document.getElementById("input-import-backup-file");
+    if (btnImportTrigger && fileInput) {
+      btnImportTrigger.addEventListener("click", () => {
+        fileInput.value = "";
+        fileInput.click();
+      });
+      fileInput.addEventListener("change", (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) this.handleImportBackup(file);
+      });
+    }
+
     // Add Custom Reward Form
     const btnAddCustom = document.getElementById("btn-submit-custom-reward");
     if (btnAddCustom) {
@@ -49,6 +87,56 @@ class SubahSettings {
 
     // Initial render of custom rewards list
     this.renderCustomRewards();
+  }
+
+  async handleExportBackup() {
+    try {
+      if (window.subahAPI && window.subahAPI.exportBackup) {
+        const backup = await window.subahAPI.exportBackup();
+        const jsonStr = (backup && backup.json) ? backup.json : JSON.stringify(backup, null, 2);
+        const blob = new Blob([jsonStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        const dateStr = (window.subahApp && window.subahApp.todayDate) || new Date().toISOString().slice(0, 10);
+        a.download = `subah-taskbook-backup-${dateStr}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        window.subahApp.showToast("📥 Backup JSON downloaded successfully!");
+      }
+    } catch (err) {
+      console.error("Export backup error:", err);
+      window.subahApp.showToast("Export failed: " + err.message);
+    }
+  }
+
+  async handleImportBackup(file) {
+    try {
+      const text = await file.text();
+      if (window.subahAPI && window.subahAPI.importBackup) {
+        const res = await window.subahAPI.importBackup(text);
+        if (res && res.success) {
+          if (window.subahAudio) {
+            if (typeof window.subahAudio.playCelebration === "function") {
+              window.subahAudio.playCelebration();
+            } else if (typeof window.subahAudio.playChime === "function") {
+              window.subahAudio.playChime();
+            }
+          }
+          window.subahApp.showToast("📤 Backup restored successfully!");
+          if (window.subahApp && window.subahApp.reloadAppState) {
+            await window.subahApp.reloadAppState();
+          }
+        } else {
+          window.subahApp.showToast("Import failed: " + ((res && res.error) || "Invalid format"));
+        }
+      }
+    } catch (err) {
+      console.error("Import backup error:", err);
+      window.subahApp.showToast("Import error: " + err.message);
+    }
   }
 
   async setTheme(theme) {
@@ -108,6 +196,9 @@ class SubahSettings {
       duration: duration,
       youtubeId: ytId,
       externalUrl: link,
+      searchUrl: ytId
+        ? `https://www.youtube.com/results?search_query=${encodeURIComponent(title)}`
+        : link,
       description: "Added to your personal reward collection"
     };
 

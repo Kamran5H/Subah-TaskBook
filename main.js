@@ -29,6 +29,7 @@ const {
   getTodayDateString,
   getYesterdayDateString,
   applyDailyStreak,
+  getStreakBadge,
   rollOverPendingTasks,
   getDefaultState
 } = require("./src/js/taskRollover.js");
@@ -36,6 +37,36 @@ const {
 function getDataFilePath() {
   const userDataPath = app.getPath("userData");
   return path.join(userDataPath, "subah-data.json");
+}
+
+function createRollingSnapshot(data) {
+  try {
+    const userDataPath = app.getPath("userData");
+    const snapshotsDir = path.join(userDataPath, "snapshots");
+    if (!fs.existsSync(snapshotsDir)) {
+      fs.mkdirSync(snapshotsDir, { recursive: true });
+    }
+    const today = getTodayDateString();
+    const snapshotFile = path.join(snapshotsDir, `snapshot-${today}.json`);
+    if (!fs.existsSync(snapshotFile)) {
+      fs.writeFileSync(snapshotFile, JSON.stringify({
+        snapshotDate: today,
+        createdAt: new Date().toISOString(),
+        ...data
+      }, null, 2), "utf-8");
+
+      // Retain up to 7 most recent snapshots
+      const files = fs.readdirSync(snapshotsDir)
+        .filter(f => f.startsWith("snapshot-") && f.endsWith(".json"))
+        .sort();
+      while (files.length > 7) {
+        const oldFile = files.shift();
+        try { fs.unlinkSync(path.join(snapshotsDir, oldFile)); } catch (_) {}
+      }
+    }
+  } catch (e) {
+    console.error("Error creating rolling snapshot:", e);
+  }
 }
 
 function loadAppData() {
@@ -72,11 +103,16 @@ function loadAppData() {
 
   if (parsed) {
     const defaults = getDefaultState();
+    const streak = typeof parsed.streak === "number" ? parsed.streak : 1;
+    const maxStreak = typeof parsed.maxStreak === "number" ? Math.max(parsed.maxStreak, streak) : streak;
     return {
       ...defaults,
       ...parsed,
+      streak,
+      maxStreak,
       settings: { ...defaults.settings, ...(parsed.settings || {}) },
       tasksByDate: parsed.tasksByDate || {},
+      reflectionsByDate: parsed.reflectionsByDate || {},
       customRewards: parsed.customRewards || []
     };
   }
@@ -195,18 +231,40 @@ function startRendererServer() {
 function createWindow() {
   const iconImg = getAppIcon();
 
-  // Screen adaptive dimensions
+  // Screen adaptive dimensions with memory for user preferences
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
-  const winWidth = Math.min(1020, Math.round(screenWidth * 0.9));
-  const winHeight = Math.min(840, Math.round(screenHeight * 0.94));
+  let winWidth = Math.min(1020, Math.round(screenWidth * 0.9));
+  let winHeight = Math.min(840, Math.round(screenHeight * 0.94));
+  let winX = undefined;
+  let winY = undefined;
 
-  mainWindow = new BrowserWindow({
+  const appData = loadAppData();
+  const savedBounds = appData.settings && appData.settings.windowBounds;
+  if (savedBounds && typeof savedBounds.width === "number" && typeof savedBounds.height === "number") {
+    const allDisplays = screen.getAllDisplays();
+    const isVisibleOnAnyDisplay = allDisplays.some(disp => {
+      const b = disp.bounds;
+      return (
+        savedBounds.x >= b.x - 50 &&
+        savedBounds.x < (b.x + b.width - 100) &&
+        savedBounds.y >= b.y - 50 &&
+        savedBounds.y < (b.y + b.height - 100)
+      );
+    });
+    if (isVisibleOnAnyDisplay) {
+      winWidth = Math.max(780, Math.min(savedBounds.width, screenWidth));
+      winHeight = Math.max(600, Math.min(savedBounds.height, screenHeight));
+      winX = savedBounds.x;
+      winY = savedBounds.y;
+    }
+  }
+
+  const windowOpts = {
     width: winWidth,
     height: winHeight,
     minWidth: 780,
     minHeight: 600,
-    center: true,
     show: true,
     frame: false, // Frameless for rich modern aesthetic
     titleBarStyle: "hidden",
@@ -222,7 +280,35 @@ function createWindow() {
       nodeIntegration: false,
       sandbox: false
     }
-  });
+  };
+
+  if (typeof winX === "number" && typeof winY === "number") {
+    windowOpts.x = winX;
+    windowOpts.y = winY;
+  } else {
+    windowOpts.center = true;
+  }
+
+  mainWindow = new BrowserWindow(windowOpts);
+
+  let boundsSaveTimer = null;
+  const debouncedSaveBounds = () => {
+    if (!mainWindow || mainWindow.isMinimized() || mainWindow.isMaximized()) return;
+    clearTimeout(boundsSaveTimer);
+    boundsSaveTimer = setTimeout(() => {
+      try {
+        if (!mainWindow || mainWindow.isDestroyed()) return;
+        const currentBounds = mainWindow.getBounds();
+        const currentData = loadAppData();
+        currentData.settings = currentData.settings || {};
+        currentData.settings.windowBounds = currentBounds;
+        saveAppData(currentData);
+      } catch (_) {}
+    }, 600);
+  };
+
+  mainWindow.on("resize", debouncedSaveBounds);
+  mainWindow.on("move", debouncedSaveBounds);
 
   mainWindow.loadURL(`http://127.0.0.1:${rendererPort}/index.html`);
 
@@ -252,6 +338,14 @@ function createWindow() {
     }
   });
 
+  // Keyboard ergonomics: F11 toggles full-screen view
+  mainWindow.webContents.on("before-input-event", (event, input) => {
+    if (input.type === "keyDown" && input.key === "F11") {
+      event.preventDefault();
+      mainWindow.setFullScreen(!mainWindow.isFullScreen());
+    }
+  });
+
   // Intercept window close to minimize to tray instead of killing app
   mainWindow.on("close", (e) => {
     if (forceQuit) {
@@ -269,6 +363,92 @@ process.on("uncaughtException", (err) => {
 process.on("unhandledRejection", (reason) => {
   console.error("CRITICAL Unhandled Rejection in Electron:", reason);
 });
+
+function updateTrayMenu() {
+  if (!tray) return;
+  try {
+    const appData = loadAppData();
+    const today = getTodayDateString();
+    const tasks = (appData.tasksByDate && appData.tasksByDate[today]) || [];
+    const completed = tasks.filter((t) => t.completed).length;
+
+    const badge = getStreakBadge(appData.streak || 1);
+
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: "🌅 Open Subah (Ctrl+Shift+T)",
+        click: () => {
+          if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.show();
+            mainWindow.focus();
+          }
+        }
+      },
+      {
+        label: `📊 Today: ${completed}/${tasks.length} tasks completed`,
+        enabled: false
+      },
+      {
+        label: `${badge.icon} Streak: ${appData.streak || 1} days (${badge.name})`,
+        enabled: false
+      },
+      { type: "separator" },
+      {
+        label: "📅 Schedule & Calendar Tasks",
+        click: () => {
+          if (mainWindow) {
+            mainWindow.show();
+            mainWindow.focus();
+            mainWindow.webContents.send("navigate-tab", "schedule");
+          }
+        }
+      },
+      {
+        label: "🎁 Surprise Reward Sanctuary",
+        click: () => {
+          if (mainWindow) {
+            mainWindow.show();
+            mainWindow.focus();
+            mainWindow.webContents.send("navigate-tab", "rewards");
+          }
+        }
+      },
+      {
+        label: "📖 Task Diary & History",
+        click: () => {
+          if (mainWindow) {
+            mainWindow.show();
+            mainWindow.focus();
+            mainWindow.webContents.send("navigate-tab", "diary");
+          }
+        }
+      },
+      {
+        label: "⚙️ Preferences",
+        click: () => {
+          if (mainWindow) {
+            mainWindow.show();
+            mainWindow.focus();
+            mainWindow.webContents.send("navigate-tab", "settings");
+          }
+        }
+      },
+      { type: "separator" },
+      {
+        label: "❌ Exit Subah",
+        click: () => {
+          forceQuit = true;
+          app.quit();
+        }
+      }
+    ]);
+
+    tray.setContextMenu(contextMenu);
+  } catch (err) {
+    console.error("Error updating tray menu:", err);
+  }
+}
 
 function createTray() {
   try {
@@ -292,85 +472,7 @@ function createTray() {
     tray = new Tray(trayIcon);
     tray.setToolTip("Subah - Daily Task & Surprise Reward Book");
 
-    const updateContextMenu = () => {
-      const appData = loadAppData();
-      const today = getTodayDateString();
-      const tasks = appData.tasksByDate[today] || [];
-      const completed = tasks.filter((t) => t.completed).length;
-
-      const contextMenu = Menu.buildFromTemplate([
-        {
-          label: "🌅 Open Subah (Ctrl+Shift+T)",
-          click: () => {
-            if (mainWindow) {
-              mainWindow.show();
-              mainWindow.focus();
-            }
-          }
-        },
-        {
-          label: `📊 Today: ${completed}/${tasks.length} tasks completed`,
-          enabled: false
-        },
-        {
-          label: `🔥 Streak: ${appData.streak || 1} days`,
-          enabled: false
-        },
-        { type: "separator" },
-        {
-          label: "✍️ Write Journal Goals",
-          click: () => {
-            if (mainWindow) {
-              mainWindow.show();
-              mainWindow.focus();
-              mainWindow.webContents.send("navigate-tab", "planner");
-            }
-          }
-        },
-        {
-          label: "🎁 Surprise Reward Sanctuary",
-          click: () => {
-            if (mainWindow) {
-              mainWindow.show();
-              mainWindow.focus();
-              mainWindow.webContents.send("navigate-tab", "rewards");
-            }
-          }
-        },
-        {
-          label: "📖 Task Diary & History",
-          click: () => {
-            if (mainWindow) {
-              mainWindow.show();
-              mainWindow.focus();
-              mainWindow.webContents.send("navigate-tab", "diary");
-            }
-          }
-        },
-        {
-          label: "⚙️ Preferences",
-          click: () => {
-            if (mainWindow) {
-              mainWindow.show();
-              mainWindow.focus();
-              mainWindow.webContents.send("navigate-tab", "settings");
-            }
-          }
-        },
-        { type: "separator" },
-        {
-          label: "❌ Exit Subah",
-          click: () => {
-            forceQuit = true;
-            app.quit();
-          }
-        }
-      ]);
-
-      tray.setContextMenu(contextMenu);
-    };
-
-    updateContextMenu();
+    updateTrayMenu();
 
     // Tray left click: smooth toggle
     tray.on("click", () => {
@@ -378,6 +480,7 @@ function createTray() {
         if (mainWindow.isVisible() && mainWindow.isFocused()) {
           mainWindow.hide();
         } else {
+          if (mainWindow.isMinimized()) mainWindow.restore();
           mainWindow.show();
           mainWindow.focus();
         }
@@ -434,14 +537,19 @@ app.whenReady().then(async () => {
       }
     });
 
-    // Sync Windows login startup setting
+    // Sync Windows login startup setting & create daily rolling snapshot
     const appData = loadAppData();
+    createRollingSnapshot(appData);
     if (appData.settings && typeof appData.settings.openAtLogin === "boolean") {
       syncStartupSettings(appData.settings.openAtLogin);
     }
 
     app.on("activate", () => {
-      if (BrowserWindow.getAllWindows().length === 0) {
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.show();
+        mainWindow.focus();
+      } else if (BrowserWindow.getAllWindows().length === 0) {
         createWindow();
       }
     });
@@ -472,6 +580,7 @@ ipcMain.handle("get-app-state", async () => {
   if (changed) {
     saveAppData(data);
   }
+  updateTrayMenu();
   return {
     ...data,
     todayDate: today,
@@ -493,6 +602,7 @@ ipcMain.handle("commit-morning-tasks", async (event, { tasks }) => {
     text: t.text.trim(),
     completed: false,
     priority: t.priority || "normal",
+    pinned: Boolean(t.pinned),
     createdAt: Date.now()
   }));
 
@@ -502,6 +612,7 @@ ipcMain.handle("commit-morning-tasks", async (event, { tasks }) => {
   data.tasksByDate[today] = formattedTasks;
   data.lastCommittedDate = today;
   saveAppData(data);
+  updateTrayMenu();
 
   return {
     success: true,
@@ -528,6 +639,7 @@ ipcMain.handle("update-tasks", async (event, { date, tasks }) => {
   }
 
   saveAppData(data);
+  updateTrayMenu();
   return { success: true, tasks: data.tasksByDate[targetDate], streak: data.streak };
 });
 
@@ -590,7 +702,72 @@ ipcMain.handle("open-external", async (event, url) => {
   return { success: false, error: "Invalid URL" };
 });
 
+// Export entire JSON database backup
+ipcMain.handle("export-backup", async () => {
+  try {
+    const data = loadAppData();
+    const payload = {
+      appName: "Subah-TaskBook",
+      version: "1.0.0",
+      exportedAt: new Date().toISOString(),
+      ...data
+    };
+    return { success: true, json: JSON.stringify(payload, null, 2) };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+// Import JSON database backup
+ipcMain.handle("import-backup", async (event, jsonString) => {
+  try {
+    if (!jsonString || typeof jsonString !== "string") {
+      return { success: false, error: "Empty or invalid backup data." };
+    }
+    let parsed = JSON.parse(jsonString);
+    if (!parsed || typeof parsed !== "object") {
+      return { success: false, error: "Invalid backup format." };
+    }
+    // Defensive unwrap if JSON was exported with a { success: true, json: "..." } wrapper
+    if (typeof parsed.json === "string") {
+      try {
+        const inner = JSON.parse(parsed.json);
+        if (inner && typeof inner === "object") {
+          parsed = inner;
+        }
+      } catch (_) {}
+    }
+    const defaults = getDefaultState();
+    const merged = {
+      ...defaults,
+      ...parsed,
+      tasksByDate: parsed.tasksByDate || {},
+      reflectionsByDate: parsed.reflectionsByDate || {},
+      customRewards: Array.isArray(parsed.customRewards) ? parsed.customRewards : [],
+      settings: { ...defaults.settings, ...(parsed.settings || {}) },
+      streak: typeof parsed.streak === "number" ? parsed.streak : 1,
+      lastCommittedDate: parsed.lastCommittedDate || null
+    };
+
+    saveAppData(merged);
+    updateTrayMenu();
+    return { success: true, data: merged };
+  } catch (err) {
+    return { success: false, error: "Failed to parse backup JSON: " + err.message };
+  }
+});
+
+// Save daily reflection note
+ipcMain.handle("save-reflection", async (event, { date, text }) => {
+  const data = loadAppData();
+  if (!data.reflectionsByDate) data.reflectionsByDate = {};
+  data.reflectionsByDate[date] = text || "";
+  saveAppData(data);
+  return { success: true, reflectionsByDate: data.reflectionsByDate };
+});
+
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { rollOverPendingTasks, applyDailyStreak };
 }
+
 

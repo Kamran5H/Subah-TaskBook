@@ -24,6 +24,7 @@
   --radius-lg: 20px;
   --radius-md: 14px;
   --radius-sm: 8px;
+  --surface-header: rgba(8, 12, 22, 0.75);
   --shadow-lg: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
 }
 
@@ -46,6 +47,7 @@
   --accent-emerald: #10b981;
   --accent-rose: #fb7185;
   --glow-accent: 0 0 25px rgba(52, 211, 153, 0.35);
+  --surface-header: rgba(2, 18, 11, 0.88);
   --glow-gold: 0 0 30px rgba(245, 158, 11, 0.45);
 }
 
@@ -68,5 +70,6 @@
   --accent-emerald: #4ade80;
   --accent-rose: #f43f5e;
   --glow-accent: 0 0 22px rgba(34, 211, 238, 0.35);
+  --surface-header: rgba(10, 10, 14, 0.95);
   --glow-gold: 0 0 22px rgba(250, 204, 21, 0.35);
 }

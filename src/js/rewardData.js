@@ -484,6 +484,146 @@ const DEFAULT_REWARDS = [
     "content": "### 🌍 Come Back to Now\nWhen the mind is scattered across a dozen worries, this sensory anchor pulls you gently back to the present.\n\n**Slowly notice:**\n- **5** things you can see.\n- **4** things you can feel (chair, floor, fabric, breath).\n- **3** things you can hear.\n- **2** things you can smell.\n- **1** thing you can taste, or one slow, grateful breath.\n\nThe present moment is the only place work actually gets done. Welcome back.",
     "description": "A grounding sequence to gather a scattered mind.",
     "searchUrl": "https://www.youtube.com/results?search_query=5-4-3-2-1%20grounding%20technique%20mindfulness"
+  },
+
+  // ── More Mashwara (Wisdom) ─────────────────────────────────────────────────
+  {
+    "id": "mashwara-09",
+    "category": "mashwara",
+    "categoryLabel": "💡 Daily Mashwara",
+    "title": "Protect Your First Hour",
+    "author": "Morning Discipline",
+    "duration": "3 mins",
+    "content": "### 🌅 The Hour That Sets the Tone\nThe first hour after waking quietly programs the whole day. Reach for the phone and you hand your attention to a hundred strangers before you have even greeted yourself.\n\n**The Mashwara:**\n1. Keep the screen dark for the first hour — no feeds, no news, no inbox.\n2. Do one grounding thing first: prayer, water, a stretch, a page of writing.\n3. Only then open the day's work, arriving as the author of your morning, not its guest.",
+    "description": "Why guarding the first hour reshapes the entire day.",
+    "searchUrl": "https://www.youtube.com/results?search_query=protect%20your%20first%20hour%20morning%20routine"
+  },
+  {
+    "id": "mashwara-10",
+    "category": "mashwara",
+    "categoryLabel": "💡 Daily Mashwara",
+    "title": "Done Is a Gift You Give Tomorrow",
+    "author": "Momentum Notes",
+    "duration": "3 mins",
+    "content": "### 🎁 Finish One Thing Fully\nA pile of half-done tasks weighs more than a stack of finished ones, because each unfinished thing keeps a small tab open in the mind.\n\n**The Mashwara:**\n- Pick the task closest to the finish line and close it completely before starting anything new.\n- Notice the quiet relief of a truly finished thing.\n- Every completion today is a gift handed to the calmer, lighter version of you tomorrow.",
+    "description": "On the compounding peace of fully finishing one task.",
+    "searchUrl": "https://www.youtube.com/results?search_query=finish%20what%20you%20start%20momentum%20productivity"
+  },
+  {
+    "id": "mashwara-11",
+    "category": "mashwara",
+    "categoryLabel": "💡 Daily Mashwara",
+    "title": "Compare Only to Yesterday's You",
+    "author": "Timeless Wisdom",
+    "duration": "3 mins",
+    "content": "### 🪞 The Only Fair Race\nComparing your chapter one to someone else's chapter twenty is a quiet thief of joy. The only honest measure of progress is the person you were yesterday.\n\n**The Mashwara:**\nAsk one gentle question: *am I one small step better than yesterday?* One task done, one habit kept, one kind word given. That step, repeated, is how ordinary days become an extraordinary life.",
+    "description": "A kinder, truer yardstick for measuring your own progress.",
+    "searchUrl": "https://www.youtube.com/results?search_query=compare%20yourself%20to%20who%20you%20were%20yesterday"
+  },
+
+  // ── More Thoughts to Ponder (Reading) ──────────────────────────────────────
+  {
+    "id": "reading-08",
+    "category": "reading",
+    "categoryLabel": "📖 Thought to Ponder",
+    "title": "The Two Buckets at the Well",
+    "author": "Sufi Parable",
+    "duration": "3 mins",
+    "content": "### 🪣 Full and Empty\nTwo buckets met at the well. One sighed: *\"No matter how full I come up, I always go down empty again — what is the use?\"*\n\nThe other smiled: *\"I see it the other way. No matter how empty I go down, I always come back up full.\"*\n\n**Reflect:**\nThe same day, the same work, two entirely different hearts. Today you will dip into effort and come up tired — but you will also come up fuller. Which bucket will you be?",
+    "description": "On choosing the lens through which you meet effort.",
+    "searchUrl": "https://www.youtube.com/results?search_query=two%20buckets%20at%20the%20well%20optimism%20story"
+  },
+  {
+    "id": "reading-09",
+    "category": "reading",
+    "categoryLabel": "📖 Thought to Ponder",
+    "title": "The Butterfly and the Struggle",
+    "author": "Nature's Lesson",
+    "duration": "3 mins",
+    "content": "### 🦋 The Necessary Struggle\nA man found a cocoon and watched a butterfly labor for hours to squeeze through a tiny opening. Wanting to help, he snipped the cocoon wide. The butterfly emerged easily — but with a swollen body and shrivelled wings. It never flew.\n\nThe struggle through the narrow opening is precisely what forces fluid into the wings. Without it, there is no flight.\n\n**Reflect:**\nThe difficulty in today's hard task is not in your way — it is building the very strength you will need to carry what comes next.",
+    "description": "On why the struggle itself is what makes us capable.",
+    "searchUrl": "https://www.youtube.com/results?search_query=butterfly%20cocoon%20struggle%20story%20meaning"
+  },
+  {
+    "id": "reading-10",
+    "category": "reading",
+    "categoryLabel": "📖 Thought to Ponder",
+    "title": "The Coffee, the Cup, and the Life",
+    "author": "Modern Parable",
+    "duration": "4 mins",
+    "content": "### ☕ It Was Never About the Cup\nAlumni visited an old professor, and soon their talk turned to complaints about stress and work. He served coffee in a jumble of cups — some crystal, some cracked, some plain.\n\n*\"Notice,\"* he said, *\"that you all reached for the finest cups and left the plain ones. The cup adds nothing to the coffee — sometimes it only hides what we drink. What you truly wanted was coffee, not the cup. Yet you consciously went for the best.\"*\n\n**Reflect:**\nMoney, status, and title are just cups. Life is the coffee. Don't let chasing finer cups make you forget to actually enjoy the coffee while it's warm.",
+    "description": "A reminder not to mistake the container for the life inside it.",
+    "searchUrl": "https://www.youtube.com/results?search_query=coffee%20and%20the%20cup%20professor%20story"
+  },
+
+  // ── More Dua & Remembrance (offline, always available) ─────────────────────
+  {
+    "id": "dua-07",
+    "category": "dua",
+    "categoryLabel": "🤲 Dua & Zikr",
+    "title": "Reliance After Effort (Tawakkul)",
+    "author": "Prophetic Practice",
+    "duration": "2 mins",
+    "content": "### 🌿 Tie Your Camel, Then Trust\nA man asked whether to tie his camel or simply trust in God. The answer: *\"Tie your camel, then trust in God.\"*\n\n**Practice:**\nDo your honest part on the task — the planning, the effort, the care. Then release the outcome with *Tawakkaltu 'ala Allah* — \"I place my trust in God.\" Effort is your duty; the result is not your burden to carry.",
+    "description": "The balance of full effort and calm surrender of the result.",
+    "searchUrl": "https://www.youtube.com/results?search_query=tie%20your%20camel%20then%20trust%20tawakkul"
+  },
+  {
+    "id": "dua-08",
+    "category": "dua",
+    "categoryLabel": "🤲 Dua & Zikr",
+    "title": "Hasbunallah — Sufficiency in the Storm",
+    "author": "Qur'anic Remembrance",
+    "duration": "2 mins",
+    "content": "### 🛡️ God Is Enough\n*HasbunAllahu wa ni'mal-wakeel.* — \"God is sufficient for us, and He is the best disposer of affairs.\" (Qur'an 3:173)\n\n**Practice:**\nWhen a task or worry feels far larger than you, breathe slowly and repeat this phrase seven times. Feel the weight shift from your shoulders to the One who can actually carry it. Then take the next small step.",
+    "description": "A powerful phrase of sufficiency for overwhelming moments.",
+    "searchUrl": "https://www.youtube.com/results?search_query=hasbunallah%20wa%20nimal%20wakeel%20meaning"
+  },
+  {
+    "id": "dua-09",
+    "category": "dua",
+    "categoryLabel": "🤲 Dua & Zikr",
+    "title": "Salawat — A Rest for the Heart",
+    "author": "Prophetic Practice",
+    "duration": "2 mins",
+    "content": "### 💚 Send Blessings, Receive Peace\n*Allahumma salli 'ala Muhammadin wa 'ala aali Muhammad.*\n\nIt is taught that whoever sends blessings upon the Prophet ﷺ once, God sends mercy upon them tenfold.\n\n**Practice:**\nBetween two tasks, pause and send salawat ten slow times. Let the rhythm soften your breathing and settle your heart before you begin again.",
+    "description": "A gentle, rhythmic remembrance that eases the heart between tasks.",
+    "searchUrl": "https://www.youtube.com/results?search_query=salawat%20durood%20benefits%20peace"
+  },
+
+  // ── More Breathe & Move (guided micro-practices, fully offline) ─────────────
+  {
+    "id": "breathe-06",
+    "category": "breathing",
+    "categoryLabel": "🌬️ Breathe & Move",
+    "title": "The Physiological Sigh — Reset in 3 Breaths",
+    "author": "Guided Practice",
+    "duration": "2 mins",
+    "content": "### 😮‍💨 The Fastest Calm\nNeuroscience found the quickest way to lower stress in real time: the physiological sigh — a double inhale followed by a long exhale.\n\n**Repeat three times:**\n1. Inhale through the nose.\n2. On top of it, sip a second short inhale to fully inflate the lungs.\n3. Exhale slowly and completely through the mouth.\n\nThree rounds is often enough to feel the body downshift. Use it before anything that makes your pulse rise.",
+    "description": "A science-backed breath that calms the body in under a minute.",
+    "searchUrl": "https://www.youtube.com/results?search_query=physiological%20sigh%20breathing%20technique"
+  },
+  {
+    "id": "breathe-07",
+    "category": "breathing",
+    "categoryLabel": "🌬️ Breathe & Move",
+    "title": "Hand on Heart — A Kindness Pause",
+    "author": "Self-Compassion Practice",
+    "duration": "2 mins",
+    "content": "### 🫶 Be Gentle With Yourself\nWhen a task goes badly or the inner critic gets loud, the body responds to warmth and touch even from your own hand.\n\n**The practice:**\n1. Place one hand gently over your heart, feel its warmth.\n2. Take three slow breaths and silently offer yourself one kind sentence: *\"This is hard, and I am doing my best.\"*\n3. Return to work as you would to a friend you respect — with patience, not punishment.",
+    "description": "A 60-second self-compassion reset for a hard moment.",
+    "searchUrl": "https://www.youtube.com/results?search_query=hand%20on%20heart%20self%20compassion%20exercise"
+  },
+  {
+    "id": "breathe-08",
+    "category": "breathing",
+    "categoryLabel": "🌬️ Breathe & Move",
+    "title": "Walk the Room — Reset the Legs",
+    "author": "Movement Break",
+    "duration": "3 mins",
+    "content": "### 🚶 Motion Changes Emotion\nStuck thinking usually lives in a stuck body. A short walk floods the brain with fresh blood and often shakes an idea loose that sitting never could.\n\n**The practice:**\n1. Stand and walk slowly around the room or to a window and back, three times.\n2. Let the arms swing, roll the shoulders, unclench the jaw.\n3. Look far away as you move. Return to the desk and notice the problem has quietly rearranged itself.",
+    "description": "A brief walking reset for when thinking gets stuck.",
+    "searchUrl": "https://www.youtube.com/results?search_query=walking%20break%20movement%20focus%20reset"
   }
 ];
 

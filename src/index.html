@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="styles/themes.css">
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/checklist.css">
-  <link rel="stylesheet" href="styles/planner.css">
+  <link rel="stylesheet" href="styles/schedule.css">
   <link rel="stylesheet" href="styles/rewards-library.css">
   <link rel="stylesheet" href="styles/modal.css">
   <link rel="stylesheet" href="styles/diary.css">
@@ -18,10 +18,7 @@
   <header class="titlebar">
     <div class="titlebar-brand">
       <div class="brand-icon-wrapper">
-        <svg class="brand-icon-svg" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor"></circle>
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
-        </svg>
+        <img src="assets/icon.png" class="brand-icon-img" alt="Subah" />
       </div>
       <div class="brand-text-col">
         <span class="brand-title">Subah</span>
@@ -35,9 +32,9 @@
         <span class="tab-icon">📋</span>
         <span class="tab-label">Today's Tasks</span>
       </button>
-      <button class="nav-tab-btn" data-tab="planner">
-        <span class="tab-icon">✍️</span>
-        <span class="tab-label">Journal Planner</span>
+      <button class="nav-tab-btn" data-tab="schedule">
+        <span class="tab-icon">📅</span>
+        <span class="tab-label">Schedule</span>
       </button>
       <button class="nav-tab-btn" data-tab="rewards">
         <span class="tab-icon">🎁</span>
@@ -130,6 +127,14 @@
         </button>
       </div>
 
+      <!-- Quick Filter Bar -->
+      <div class="checklist-filter-bar">
+        <button class="checklist-filter-pill active" data-filter="all">All (<span id="count-filter-all">0</span>)</button>
+        <button class="checklist-filter-pill" data-filter="pending">⏳ Pending (<span id="count-filter-pending">0</span>)</button>
+        <button class="checklist-filter-pill" data-filter="completed">✅ Done (<span id="count-filter-completed">0</span>)</button>
+        <button class="checklist-filter-pill" data-filter="high">🔥 High (<span id="count-filter-high">0</span>)</button>
+      </div>
+
       <!-- Dynamic Task Items List -->
       <div id="task-items-container" class="task-items-container">
         <!-- Rendered dynamically by checklist.js -->
@@ -142,39 +147,95 @@
     </section>
 
     <!-- =========================================
-         TAB 2: JOURNAL PLANNER
+         TAB 2: SCHEDULE TASKS & CALENDAR
          ========================================= -->
-    <section id="tab-planner" class="tab-screen">
-      <div class="planner-header">
-        <div>
-          <h2 class="planner-title">Morning Journal Planner</h2>
-          <p class="planner-subtitle">Write your goals freely line-by-line. Each line converts into a checklist item.</p>
-        </div>
-        <div id="planner-counter-badge" class="planner-counter-pill">
-          0 goals written
-        </div>
-      </div>
+    <section id="tab-schedule" class="tab-screen">
+      <div class="schedule-wrapper">
+        <div class="schedule-grid-container">
 
-      <!-- Clean Writing Pad (No fake placeholder lines) -->
-      <div class="planner-pad-container">
-        <textarea
-          id="planner-textarea"
-          class="planner-textarea"
-          placeholder="Write today's goals here (one per line)..."
-          autofocus
-        ></textarea>
-      </div>
+          <!-- Left Column: Interactive Month Calendar -->
+          <div class="schedule-calendar-card">
+            <div class="calendar-nav-header">
+              <span id="schedule-month-year-label" class="calendar-month-year">September 2026</span>
+              <div class="calendar-nav-actions">
+                <button id="btn-schedule-prev-month" class="btn-cal-nav" title="Previous Month">◀</button>
+                <button id="btn-schedule-jump-today" class="btn-cal-today" title="Jump to Current Day">Today</button>
+                <button id="btn-schedule-next-month" class="btn-cal-nav" title="Next Month">▶</button>
+              </div>
+            </div>
 
-      <!-- Action Bar -->
-      <div class="planner-footer-bar">
-        <span class="planner-hint">💡 Tip: Press Enter for each new goal</span>
-        <div class="planner-btn-group">
-          <button id="btn-clear-planner" class="btn-secondary">
-            Clear
-          </button>
-          <button id="btn-save-planner-tasks" class="btn-glow-primary">
-            <span>✨ Add to Today's Tasks →</span>
-          </button>
+            <div class="calendar-weekdays-row">
+              <span class="calendar-weekday-col">Mo</span>
+              <span class="calendar-weekday-col">Tu</span>
+              <span class="calendar-weekday-col">We</span>
+              <span class="calendar-weekday-col">Th</span>
+              <span class="calendar-weekday-col">Fr</span>
+              <span class="calendar-weekday-col">Sa</span>
+              <span class="calendar-weekday-col">Su</span>
+            </div>
+
+            <div id="schedule-calendar-days" class="calendar-days-grid">
+              <!-- Rendered dynamically by schedule.js -->
+            </div>
+
+            <div class="calendar-tools-section">
+              <div class="schedule-preset-chips-row">
+                <button class="schedule-preset-chip" data-offset-days="0">Today</button>
+                <button class="schedule-preset-chip" data-offset-days="1">+1 Tomorrow</button>
+                <button class="schedule-preset-chip" data-offset-days="3">+3 Days</button>
+                <button class="schedule-preset-chip" data-offset-days="7">+1 Week</button>
+              </div>
+              <div class="schedule-manual-date-wrap">
+                <span class="schedule-manual-label">Pick Date:</span>
+                <input type="date" id="schedule-manual-date" class="schedule-manual-date-input" title="Select or type date directly">
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Selected Day Tasks -->
+          <div class="schedule-tasks-card">
+            <div class="schedule-day-header-row">
+              <div class="schedule-day-title-col">
+                <h2 id="schedule-selected-day-title" class="schedule-day-title">Today's Schedule</h2>
+                <span id="schedule-selected-day-subtitle" class="schedule-day-subtitle">🌟 Today</span>
+              </div>
+              <span id="schedule-selected-day-counter" class="schedule-day-counter-pill">0 tasks</span>
+            </div>
+
+            <!-- Quick Add Task Bar -->
+            <div class="schedule-add-task-bar">
+              <input
+                type="text"
+                id="schedule-add-task-input"
+                class="schedule-add-task-input"
+                placeholder="Add goal for this day..."
+                autocomplete="off"
+              />
+              <select id="schedule-add-priority-select" class="schedule-priority-select" title="Priority">
+                <option value="normal">Normal</option>
+                <option value="high">High 🔥</option>
+                <option value="low">Low</option>
+              </select>
+              <label class="schedule-pin-toggle-label" title="Pin this task so it appears at top">
+                <input type="checkbox" id="schedule-add-pin-checkbox" />
+                <span>📌 Pin</span>
+              </label>
+              <button id="btn-schedule-add-task" class="btn-schedule-submit">
+                <span>+ Add Goal</span>
+              </button>
+            </div>
+
+            <!-- Task Items for Selected Day -->
+            <div id="schedule-day-tasks-container" class="schedule-tasks-list-wrap">
+              <!-- Rendered dynamically by schedule.js -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Inline Developer Signature -->
+        <div class="dev-signature-inline">
+          <span class="dev-sig-inline-label">Developer</span><span class="dev-sig-inline-name signature-gold-text">Kamran Ashraf</span>
         </div>
       </div>
     </section>
@@ -260,6 +321,7 @@
           <button class="diary-filter-btn active" data-filter="all">All Entries</button>
           <button class="diary-filter-btn" data-filter="completed">Completed Only</button>
           <button class="diary-filter-btn" data-filter="pending">Pending / Carried</button>
+          <button class="diary-filter-btn export-md" id="btn-diary-export-md" title="Export complete journal to Markdown">📋 Export MD</button>
         </div>
       </div>
 
@@ -341,10 +403,37 @@
                 <span class="setting-item-title">Acoustic Chimes & Fanfares</span>
                 <span class="setting-item-desc">Plays celebratory chimes, completion bells, and mindful singing bowl timers.</span>
               </div>
-              <label class="switch-control">
-                <input type="checkbox" id="toggle-sound-effects" checked>
-                <span class="switch-slider"></span>
-              </label>
+              <div style="display: flex; gap: 12px; align-items: center;">
+                <button id="btn-test-sound" class="btn-primary-subtle" style="padding: 5px 12px; font-size: 11.5px;" title="Test acoustic audio synthesizer">
+                  🔔 Test Sound
+                </button>
+                <label class="switch-control">
+                  <input type="checkbox" id="toggle-sound-effects" checked>
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Backup & Safe Storage -->
+        <div class="settings-block">
+          <h4 class="settings-section-title">Data Management & Backup</h4>
+          <div class="settings-list-card">
+            <div class="setting-row" style="flex-wrap: wrap; gap: 14px;">
+              <div class="setting-info" style="min-width: 240px; flex: 1;">
+                <span class="setting-item-title">Safe Data Vault</span>
+                <span class="setting-item-desc">Safely export all your tasks, reflections, streaks, and custom rewards as a JSON file, or restore from a previous backup anytime.</span>
+              </div>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <button id="btn-export-backup" class="btn-glow-primary" style="padding: 8px 16px; font-size: 12px;">
+                  📥 Export Backup JSON
+                </button>
+                <button id="btn-import-backup-trigger" class="btn-secondary" style="padding: 8px 16px; font-size: 12px;">
+                  📤 Import Backup JSON
+                </button>
+                <input type="file" id="input-import-backup-file" accept=".json,application/json" style="display: none;" />
+              </div>
             </div>
           </div>
         </div>
@@ -361,6 +450,8 @@
                 <option value="melody">🎵 Peaceful Melody</option>
                 <option value="mashwara">💡 Mashwara / Advice</option>
                 <option value="reading">📖 Reading</option>
+                <option value="dua">🤲 Dua & Zikr</option>
+                <option value="breathing">🌬️ Breathe & Move</option>
                 <option value="reel">📱 Short Reel</option>
               </select>
             </div>
@@ -451,9 +542,11 @@
           <div class="timer-left">
             <div id="timer-clock-badge" class="timer-clock-badge">07:00</div>
             <div class="timer-duration-options">
+              <button class="timer-dur-btn" data-mins="3">3 Min</button>
               <button class="timer-dur-btn" data-mins="5">5 Min</button>
               <button class="timer-dur-btn active" data-mins="7">7 Min</button>
               <button class="timer-dur-btn" data-mins="10">10 Min</button>
+              <button class="timer-dur-btn" data-mins="15">15 Min</button>
             </div>
             <button id="btn-timer-toggle" class="btn-secondary timer-toggle-btn">
               ⏸ Pause
@@ -483,7 +576,7 @@
   <script src="js/audio.js"></script>
   <script src="js/checklist.js"></script>
   <script src="js/rewards.js"></script>
-  <script src="js/planner.js"></script>
+  <script src="js/schedule.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/diary.js"></script>
   <script src="js/app.js"></script>

@@ -6,6 +6,9 @@ contextBridge.exposeInMainWorld("subahAPI", {
   updateTasks: (payload) => ipcRenderer.invoke("update-tasks", payload),
   saveSettings: (settings) => ipcRenderer.invoke("save-settings", settings),
   saveCustomRewards: (rewards) => ipcRenderer.invoke("save-custom-rewards", rewards),
+  exportBackup: () => ipcRenderer.invoke("export-backup"),
+  importBackup: (jsonStr) => ipcRenderer.invoke("import-backup", jsonStr),
+  saveReflection: (payload) => ipcRenderer.invoke("save-reflection", payload),
 
   // Window Controls
   windowMinimize: () => ipcRenderer.send("window-minimize"),
