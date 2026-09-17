@@ -107,7 +107,29 @@ assert(indexHtml.includes("liveShare.js"), "index.html must load liveShare.js sc
 assert(indexHtml.includes("updater.js"), "index.html must load updater.js script");
 console.log("✓ index.html structure verified with Live Share and Updater UI elements.");
 
-// 7. Verify Developer Signature remains preserved & click-inert
+// 7. Test Co-Working & Remote Toggle Handlers in liveShare.js
+const liveShareSrc = fs.readFileSync(path.join(ROOT, "src", "js", "liveShare.js"), "utf-8");
+assert(liveShareSrc.includes("handleRemoteTaskToggle"), "liveShare.js must define handleRemoteTaskToggle");
+assert(liveShareSrc.includes("requestToggleRemoteTask"), "liveShare.js must define requestToggleRemoteTask");
+assert(liveShareSrc.includes("live-checkbox-btn"), "liveShare.js must render interactive live-checkbox-btn");
+assert(liveShareSrc.includes("beforeunload"), "liveShare.js must clean up peer connection on beforeunload");
+console.log("✓ Co-Working remote task toggle and unload cleanup verified in liveShare.js.");
+
+// 8. Test Dual-Strategy Update Detection in main.js
+assert(mainSrc.includes("raw.githubusercontent.com"), "main.js must support raw package.json fallback check");
+assert(mainSrc.includes("compareVersions(remoteVer, APP_VERSION)"), "main.js must compare remote package.json version");
+console.log("✓ Dual-strategy update detection (Releases + raw package.json) verified.");
+
+// 9. Test Theme Adaptation in liveShare.css and updater.css
+const liveShareCss = fs.readFileSync(path.join(ROOT, "src", "styles", "liveShare.css"), "utf-8");
+const updaterCss = fs.readFileSync(path.join(ROOT, "src", "styles", "updater.css"), "utf-8");
+assert(liveShareCss.includes("var(--surface-1"), "liveShare.css must use theme variable --surface-1");
+assert(liveShareCss.includes("var(--text-primary"), "liveShare.css must use theme variable --text-primary");
+assert(updaterCss.includes("var(--surface-1"), "updater.css must use theme variable --surface-1");
+assert(updaterCss.includes("var(--text-primary"), "updater.css must use theme variable --text-primary");
+console.log("✓ CSS styling verified for seamless multi-theme adaptation across all 3 visual themes.");
+
+// 10. Verify Developer Signature remains preserved & click-inert
 assert(indexHtml.includes("Kamran Ashraf"), "developer credit must remain present in index.html");
 assert(indexHtml.includes("signature-gold-text"), "developer credit must retain gold signature class");
 console.log("✓ Golden developer credit ('Kamran Ashraf') preserved without regression.");

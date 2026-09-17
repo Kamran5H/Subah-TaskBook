@@ -99,6 +99,11 @@
           }
         });
       }
+
+      // Cleanup on window unload
+      window.addEventListener("beforeunload", () => {
+        this.cleanupPeer();
+      });
     },
 
     generateRoomCode() {
@@ -479,11 +484,22 @@
 
       container.innerHTML = myState.tasks.map((t) => `
         <div class="live-task-row ${t.completed ? "completed" : ""}">
-          <span style="font-size: 14px;">${t.completed ? "✅" : "⏳"}</span>
+          <button class="live-checkbox-btn" data-id="${t.id}" title="${t.completed ? 'Mark pending' : 'Complete goal'}">
+            ${t.completed ? "✅" : "⏳"}
+          </button>
           <span class="live-task-text">${this.escapeHtml(t.text)}</span>
           ${t.priority === "high" ? `<span style="font-size: 11px; color: #fbbf24; font-weight: 600;">HIGH</span>` : ""}
         </div>
       `).join("");
+
+      container.querySelectorAll(".live-checkbox-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const id = e.currentTarget.getAttribute("data-id");
+          if (id && window.subahChecklist) {
+            window.subahChecklist.toggleTask(id);
+          }
+        });
+      });
     },
 
     renderPeerTasksUI() {
@@ -507,11 +523,48 @@
 
       container.innerHTML = this.peerTasks.map((t) => `
         <div class="live-task-row ${t.completed ? "completed" : ""}">
-          <span style="font-size: 14px;">${t.completed ? "✅" : "⏳"}</span>
+          <button class="live-checkbox-btn" data-peer-id="${t.id}" title="${this.sharingMode === 'coworking' ? (t.completed ? 'Mark pending' : 'Check off together') : 'Friend goal'}">
+            ${t.completed ? "✅" : "⏳"}
+          </button>
           <span class="live-task-text">${this.escapeHtml(t.text)}</span>
           ${t.priority === "high" ? `<span style="font-size: 11px; color: #fbbf24; font-weight: 600;">HIGH</span>` : ""}
         </div>
       `).join("");
+
+      container.querySelectorAll(".live-checkbox-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const id = e.currentTarget.getAttribute("data-peer-id");
+          if (id) {
+            this.requestToggleRemoteTask(id);
+          }
+        });
+      });
+    },
+
+    requestToggleRemoteTask(taskId) {
+      if (this.sharingMode !== "coworking") {
+        if (window.subahApp) {
+          window.subahApp.showToast("In Dual Accountability mode (view-only). Switch to Shared Co-Working to check off goals together.", "info");
+        }
+        return;
+      }
+      this.sendPayload({
+        type: "toggle-task-request",
+        taskId: taskId
+      });
+    },
+
+    handleRemoteTaskToggle(taskId) {
+      if (this.sharingMode !== "coworking") return;
+      if (window.subahChecklist && Array.isArray(window.subahChecklist.tasks)) {
+        const task = window.subahChecklist.tasks.find((t) => t.id === taskId);
+        if (task && !task.isPrivate) {
+          window.subahChecklist.toggleTask(taskId);
+          if (window.subahApp) {
+            window.subahApp.showToast(`🤝 ${this.peerDisplayName} checked off: "${task.text}"!`, "success");
+          }
+        }
+      }
     },
 
     sendPayload(payload) {

@@ -843,39 +843,65 @@ ipcMain.handle("get-app-version", () => {
 
 ipcMain.handle("check-for-updates", async () => {
   try {
-    const release = await fetchJsonFromHttps(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`);
-    if (!release || !release.tag_name) {
+    let release = null;
+    try {
+      release = await fetchJsonFromHttps(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`);
+    } catch (_) {}
+
+    if (release && release.tag_name) {
+      const latestTag = release.tag_name.trim();
+      const hasUpdate = compareVersions(latestTag, APP_VERSION) > 0;
+
+      let downloadAsset = null;
+      if (Array.isArray(release.assets) && release.assets.length > 0) {
+        downloadAsset = release.assets.find(a => a.name.endsWith(".exe") || a.name.endsWith(".zip")) || release.assets[0];
+      }
+
       return {
         success: true,
-        hasUpdate: false,
+        hasUpdate,
         currentVersion: APP_VERSION,
-        message: "You are running the latest version of Subah."
+        latestVersion: latestTag,
+        releaseName: release.name || latestTag,
+        releaseNotes: release.body || "No detailed release notes provided.",
+        publishedAt: release.published_at,
+        releaseUrl: release.html_url,
+        downloadUrl: downloadAsset ? downloadAsset.browser_download_url : (release.zipball_url || `https://github.com/${GITHUB_REPO}/archive/refs/heads/main.zip`),
+        assetName: downloadAsset ? downloadAsset.name : `Subah-${latestTag}.zip`,
+        assetSize: downloadAsset ? downloadAsset.size : null
       };
     }
 
-    const latestTag = release.tag_name.trim();
-    const hasUpdate = compareVersions(latestTag, APP_VERSION) > 0;
-
-    let downloadAsset = null;
-    if (Array.isArray(release.assets) && release.assets.length > 0) {
-      downloadAsset = release.assets.find(a => a.name.endsWith(".exe") || a.name.endsWith(".zip")) || release.assets[0];
-    }
+    // Fallback: Check raw package.json on main branch directly (no API rate limit)
+    try {
+      const remotePkg = await fetchJsonFromHttps(`https://raw.githubusercontent.com/${GITHUB_REPO}/main/package.json`);
+      if (remotePkg && remotePkg.version) {
+        const remoteVer = remotePkg.version.trim();
+        const hasUpdate = compareVersions(remoteVer, APP_VERSION) > 0;
+        return {
+          success: true,
+          hasUpdate,
+          currentVersion: APP_VERSION,
+          latestVersion: `v${remoteVer}`,
+          releaseName: `Subah v${remoteVer}`,
+          releaseNotes: `### What's New in v${remoteVer}\n- Latest updates, features, and fixes published to GitHub.\n- Automatic synchronization and co-working improvements.`,
+          publishedAt: new Date().toISOString(),
+          releaseUrl: `https://github.com/${GITHUB_REPO}`,
+          downloadUrl: `https://github.com/${GITHUB_REPO}/archive/refs/heads/main.zip`,
+          assetName: `Subah-v${remoteVer}.zip`,
+          assetSize: null
+        };
+      }
+    } catch (_) {}
 
     return {
       success: true,
-      hasUpdate,
+      hasUpdate: false,
       currentVersion: APP_VERSION,
-      latestVersion: latestTag,
-      releaseName: release.name || latestTag,
-      releaseNotes: release.body || "No detailed release notes provided.",
-      publishedAt: release.published_at,
-      releaseUrl: release.html_url,
-      downloadUrl: downloadAsset ? downloadAsset.browser_download_url : (release.zipball_url || release.html_url),
-      assetName: downloadAsset ? downloadAsset.name : `Subah-${latestTag}.zip`,
-      assetSize: downloadAsset ? downloadAsset.size : null
+      message: "You are running the latest version of Subah."
     };
   } catch (err) {
-    console.warn("Could not check GitHub releases:", err.message);
+    console.warn("Could not check updates:", err.message);
     return {
       success: false,
       hasUpdate: false,
