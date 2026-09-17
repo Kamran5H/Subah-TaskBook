@@ -145,6 +145,7 @@ class SubahChecklist {
             <div class="task-tags-row">
               ${task.pinned ? '<span class="pinned-tag-pill" title="Pinned to top">📌 PINNED</span>' : ''}
               <span class="priority-tag ${task.priority || 'normal'}" role="button" tabindex="0" title="Click to change priority (High / Normal / Low)">${priorityLabel}</span>
+              ${task.isPrivate ? '<span class="pinned-tag-pill" style="background: rgba(251,191,36,0.15); color: #fbbf24; border-color: rgba(251,191,36,0.3);" title="Private Goal - Hidden from live share">🔒 PRIVATE</span>' : ''}
               ${task.carriedOverFrom ? `<span class="diary-carried-pill" style="font-size: 10px; padding: 1px 7px;">🔄 Carried from ${task.carriedOverFrom}</span>` : ''}
               ${task.rewardClaimed ? '<span class="reward-claimed-pill">🎁 Reward Claimed</span>' : ''}
             </div>
@@ -156,6 +157,9 @@ class SubahChecklist {
               <line x1="12" y1="17" x2="12" y2="22"></line>
               <path d="M5 17h14v-2l-2-2V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v8l-2 2v2z"></path>
             </svg>
+          </button>
+          <button class="btn-task-action privacy ${task.isPrivate ? 'active' : ''}" title="${task.isPrivate ? 'Private (Hidden from live share) - Click to make public' : 'Public in live share - Click to make private'}">
+            <span style="font-size: 13px;">${task.isPrivate ? '🔒' : '👁️'}</span>
           </button>
           ${!task.completed ? `
             <button class="btn-task-action defer" title="Defer task to tomorrow">
@@ -219,6 +223,15 @@ class SubahChecklist {
         });
       }
 
+      // Privacy button listener
+      const privacyBtn = card.querySelector(".btn-task-action.privacy");
+      if (privacyBtn) {
+        privacyBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          this.togglePrivacy(task.id);
+        });
+      }
+
       // Defer to tomorrow listener
       const deferBtn = card.querySelector(".btn-task-action.defer");
       if (deferBtn) {
@@ -275,6 +288,11 @@ class SubahChecklist {
 
       // 3. Open Surprise Reward Gift Modal
       window.subahRewards.presentSurpriseReward(task);
+
+      // 4. Live Share broadcast celebration to friend
+      if (window.SubahLiveShare) {
+        window.SubahLiveShare.broadcastTasksUpdate({ completedTaskText: task.text });
+      }
     } else {
       delete task.completedAt;
       window.subahAudio.playClick();
@@ -282,6 +300,23 @@ class SubahChecklist {
 
     this.render();
     await this.persist();
+  }
+
+  async togglePrivacy(taskId) {
+    const task = this.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    task.isPrivate = !task.isPrivate;
+    this.render();
+    await this.persist();
+
+    if (window.SubahLiveShare) {
+      window.SubahLiveShare.broadcastTasksUpdate();
+    }
+
+    if (window.subahApp) {
+      window.subahApp.showToast(task.isPrivate ? "🔒 Goal marked private (hidden from friends)" : "👁️ Goal is now visible to friends in live share", "info");
+    }
   }
 
   startInlineEdit(card, task) {
@@ -478,6 +513,9 @@ class SubahChecklist {
     }
     if (window.subahApp && typeof window.subahApp.onTasksUpdated === "function") {
       window.subahApp.onTasksUpdated(this.todayDate, this.tasks, res && res.streak);
+    }
+    if (window.SubahLiveShare) {
+      window.SubahLiveShare.broadcastTasksUpdate();
     }
   }
 

@@ -11,6 +11,8 @@
   <link rel="stylesheet" href="styles/rewards-library.css">
   <link rel="stylesheet" href="styles/modal.css">
   <link rel="stylesheet" href="styles/diary.css">
+  <link rel="stylesheet" href="styles/liveShare.css">
+  <link rel="stylesheet" href="styles/updater.css">
 </head>
 <body data-theme="midnight-aurora">
 
@@ -43,6 +45,10 @@
       <button class="nav-tab-btn" data-tab="diary">
         <span class="tab-icon">📖</span>
         <span class="tab-label">Diary</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="live-share">
+        <span class="tab-icon">🤝</span>
+        <span class="tab-label">Live Share</span>
       </button>
       <button class="nav-tab-btn" data-tab="settings">
         <span class="tab-icon">⚙️</span>
@@ -80,12 +86,19 @@
           </div>
         </div>
 
-        <div class="streak-card-badge" title="Consecutive daily planning streak">
-          <span class="streak-fire-icon">🔥</span>
-          <div class="streak-info-text">
-            <span id="streak-count-num" class="streak-count-num">1</span>
-            <span class="streak-label-sub">Day Streak</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="streak-card-badge" title="Consecutive daily planning streak">
+            <span class="streak-fire-icon">🔥</span>
+            <div class="streak-info-text">
+              <span id="streak-count-num" class="streak-count-num">1</span>
+              <span class="streak-label-sub">Day Streak</span>
+            </div>
           </div>
+
+          <button id="btn-quick-live-share" class="btn-glow-primary" style="padding: 7px 14px; font-size: 12px; display: flex; align-items: center; gap: 6px;" title="Go Live & Share Goals with Friends">
+            <span>🤝</span>
+            <span>Go Live</span>
+          </button>
         </div>
       </div>
 
@@ -332,7 +345,195 @@
     </section>
 
     <!-- =========================================
-         TAB 5: SETTINGS & PREFERENCES
+         TAB 5: LIVE SHARE & CO-WORKING
+         ========================================= -->
+    <section id="tab-live-share" class="tab-screen">
+      <div class="live-share-container">
+
+        <!-- Top Bar with Status & Header -->
+        <div class="live-share-top-bar">
+          <div class="date-streak-group">
+            <h2 class="daily-date-heading" style="margin-bottom: 2px;">🤝 Live Focus Circle</h2>
+            <p style="font-size: 13px; color: var(--text-sub, #94a3b8);">Connect with friends in real time. Share today's goals, see live progress, and cheer each other on.</p>
+          </div>
+
+          <div id="live-status-pill" class="live-status-badge offline">
+            <span class="status-dot-pulse"></span>
+            <span id="live-status-label">Offline (Not Connected)</span>
+          </div>
+        </div>
+
+        <!-- STAGE 1: CONNECTION LOBBY (When not connected) -->
+        <div id="live-lobby-section" class="live-lobby-grid">
+          
+          <!-- Card 1: Host a Session -->
+          <div class="lobby-card">
+            <div class="lobby-card-header">
+              <div class="lobby-card-icon">👑</div>
+              <div>
+                <h3 class="lobby-card-title">Host Live Session</h3>
+                <span class="lobby-card-desc">Generate a clean room code to share with your friends.</span>
+              </div>
+            </div>
+
+            <div class="lobby-form-group">
+              <label style="font-size: 12px; font-weight: 600; color: var(--text-sub, #94a3b8);">Your Display Name</label>
+              <input type="text" id="host-display-name" class="form-input" placeholder="e.g. Kamran" value="Kamran" />
+            </div>
+
+            <div class="lobby-form-group">
+              <label style="font-size: 12px; font-weight: 600; color: var(--text-sub, #94a3b8);">Sharing Permission</label>
+              <select id="live-sharing-mode" class="form-select">
+                <option value="dual">Dual Accountability (View each other's goals)</option>
+                <option value="coworking">Shared Co-Working (Work on goals together)</option>
+              </select>
+            </div>
+
+            <div id="host-code-box" class="room-code-display-box" style="display: none;">
+              <div>
+                <span style="font-size: 11px; color: var(--text-sub, #94a3b8); display: block;">ROOM CODE</span>
+                <span id="host-generated-code" class="room-code-value">SUB-XXXX</span>
+              </div>
+              <button id="btn-copy-room-code" class="btn-glow-primary code-copy-btn">📋 Copy Code</button>
+            </div>
+
+            <button id="btn-create-live-room" class="btn-glow-primary" style="padding: 10px 18px; font-size: 13.5px; font-weight: 600; margin-top: 4px;">
+              🚀 Start Live Session
+            </button>
+          </div>
+
+          <!-- Card 2: Join a Session -->
+          <div class="lobby-card">
+            <div class="lobby-card-header">
+              <div class="lobby-card-icon">⚡</div>
+              <div>
+                <h3 class="lobby-card-title">Join Friend's Session</h3>
+                <span class="lobby-card-desc">Enter the 6-digit code provided by your friend.</span>
+              </div>
+            </div>
+
+            <div class="lobby-form-group">
+              <label style="font-size: 12px; font-weight: 600; color: var(--text-sub, #94a3b8);">Your Display Name</label>
+              <input type="text" id="join-display-name" class="form-input" placeholder="e.g. Ali" />
+            </div>
+
+            <div class="lobby-form-group">
+              <label style="font-size: 12px; font-weight: 600; color: var(--text-sub, #94a3b8);">Room Code</label>
+              <input type="text" id="join-room-code" class="form-input" placeholder="e.g. SUB-4892" style="font-family: monospace; font-size: 15px; letter-spacing: 1px; text-transform: uppercase;" />
+            </div>
+
+            <button id="btn-join-live-room" class="btn-primary-subtle" style="padding: 10px 18px; font-size: 13.5px; font-weight: 600; margin-top: auto;">
+              🤝 Connect to Friend
+            </button>
+          </div>
+
+        </div>
+
+        <!-- STAGE 2: ACTIVE LIVE ROOM (When connected) -->
+        <div id="live-active-room-section" class="live-active-room">
+
+          <!-- Room Banner -->
+          <div class="live-room-banner">
+            <div class="room-meta-group">
+              <div class="room-pill">
+                <span>Room:</span>
+                <strong id="room-code-banner-val">SUB-XXXX</strong>
+                <button id="btn-copy-banner-code" style="background: none; border: none; color: inherit; cursor: pointer; padding: 0 4px;" title="Copy Code">📋</button>
+              </div>
+
+              <div class="peer-list-pill">
+                <div class="peer-avatar" id="live-peer-avatar-initial">F</div>
+                <span id="live-peer-name" style="font-weight: 600; color: var(--text-main, #f8fafc);">Friend</span>
+                <span id="live-peer-streak-badge" class="column-badge" style="color: #fbbf24; border: 1px solid rgba(251,191,36,0.3);">🔥 Streak</span>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <button id="btn-kick-peer" class="btn-secondary" style="padding: 6px 12px; font-size: 12px;" title="Disconnect Peer">
+                ✕ Disconnect
+              </button>
+              <button id="btn-leave-live-room" class="btn-secondary" style="padding: 6px 14px; font-size: 12px;">
+                Leave Session
+              </button>
+            </div>
+          </div>
+
+          <!-- Dual Side-by-Side Accountability Columns -->
+          <div class="dual-accountability-grid">
+            
+            <!-- Left: My Goals -->
+            <div class="accountability-column">
+              <div class="column-header">
+                <div class="column-user-info">
+                  <span style="font-size: 18px;">📋</span>
+                  <div>
+                    <span class="column-title" id="live-my-name">My Goals</span>
+                    <span class="column-badge">Host / Local</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="column-progress-bar">
+                <div class="column-progress-labels">
+                  <span>Today's Progress</span>
+                  <span id="live-my-progress-label">0/0 (0%)</span>
+                </div>
+                <div class="column-progress-track">
+                  <div id="live-my-progress-fill" class="column-progress-fill"></div>
+                </div>
+              </div>
+
+              <div id="live-my-tasks-list" class="live-tasks-scroll">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+
+            <!-- Right: Friend's Goals -->
+            <div class="accountability-column">
+              <div class="column-header">
+                <div class="column-user-info">
+                  <span style="font-size: 18px;">🌟</span>
+                  <div>
+                    <span class="column-title" id="live-friend-column-title">Friend's Goals</span>
+                    <span class="column-badge" style="background: rgba(52,211,153,0.15); color: #34d399;">Live Connected</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="column-progress-bar">
+                <div class="column-progress-labels">
+                  <span>Friend's Progress</span>
+                  <span id="live-peer-progress-label">0/0 (0%)</span>
+                </div>
+                <div class="column-progress-track">
+                  <div id="live-peer-progress-fill" class="column-progress-fill friend"></div>
+                </div>
+              </div>
+
+              <div id="live-peer-tasks-list" class="live-tasks-scroll">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Quick Live Reaction Dock -->
+          <div class="live-reaction-dock">
+            <span class="reaction-dock-label">Send Cheer:</span>
+            <button class="reaction-btn" data-emoji="🔥" title="You're on fire!">🔥 <span>Fire</span></button>
+            <button class="reaction-btn" data-emoji="👏" title="Great job!">👏 <span>Clap</span></button>
+            <button class="reaction-btn" data-emoji="☕" title="Take a breather!">☕ <span>Break</span></button>
+            <button class="reaction-btn" data-emoji="🤲" title="Barakah & Dua">🤲 <span>Dua</span></button>
+            <button class="reaction-btn" data-emoji="🚀" title="Unstoppable momentum!">🚀 <span>Rocket</span></button>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =========================================
+         TAB 6: SETTINGS & PREFERENCES
          ========================================= -->
     <section id="tab-settings" class="tab-screen">
       <div class="settings-screen-body">
@@ -412,6 +613,38 @@
                   <span class="switch-slider"></span>
                 </label>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- App Software Updates -->
+        <div class="settings-block">
+          <h4 class="settings-section-title">App Software Updates & Releases</h4>
+          <div class="settings-list-card">
+            <div class="setting-row" style="flex-wrap: wrap; gap: 14px;">
+              <div class="setting-info" style="min-width: 240px; flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                  <span class="setting-item-title">Subah TaskBook Version</span>
+                  <span class="update-status-pill up-to-date" id="settings-version-pill">v1.0.0 (Latest)</span>
+                </div>
+                <span class="setting-item-desc">Connected to official repository: <strong>Kamran5H/Subah-TaskBook</strong>. Whenever updates or enhancements are made on your machine and published, friends are notified instantly.</span>
+              </div>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <button id="btn-check-updates-now" class="btn-glow-primary" style="padding: 8px 18px; font-size: 12px;">
+                  🔄 Check for Updates Now
+                </button>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-item-title">Automatic Update Checks</span>
+                <span class="setting-item-desc">Silently checks for new versions on startup and prompts you with the latest release notes.</span>
+              </div>
+              <label class="switch-control">
+                <input type="checkbox" id="toggle-auto-updates" checked>
+                <span class="switch-slider"></span>
+              </label>
             </div>
           </div>
         </div>
@@ -567,10 +800,51 @@
     </div>
   </div>
 
+  <!-- =========================================
+       IN-APP SOFTWARE UPDATER MODAL
+       ========================================= -->
+  <div id="updater-modal" class="modal-overlay">
+    <div class="updater-modal-card">
+      <div class="updater-header">
+        <div class="updater-brand-group">
+          <div class="updater-rocket-icon">🚀</div>
+          <div class="updater-title-col">
+            <span class="updater-title-text">New Version Available</span>
+            <span id="updater-version-tag" class="updater-version-tag">Checking...</span>
+          </div>
+        </div>
+        <button id="btn-close-updater-modal" class="btn-close-modal" title="Close">✕</button>
+      </div>
+
+      <div class="updater-body">
+        <div id="updater-release-name" class="updater-release-name">Release Title</div>
+        <div id="updater-notes-box" class="updater-notes-box">Loading release notes...</div>
+
+        <!-- Progress bar shown during download -->
+        <div id="updater-progress-stage" class="updater-progress-stage">
+          <div class="updater-progress-label-row">
+            <span>Downloading Update...</span>
+            <span id="updater-progress-percent">0%</span>
+          </div>
+          <div class="updater-progress-track">
+            <div id="updater-progress-bar" class="updater-progress-bar"></div>
+          </div>
+        </div>
+
+        <div class="updater-footer-actions">
+          <button id="btn-updater-later" class="btn-secondary">Remind Me Later</button>
+          <button id="btn-updater-browser" class="btn-secondary" title="Open GitHub release directly">🌐 Release Page</button>
+          <button id="btn-updater-action" class="btn-glow-primary">🚀 Upgrade to Latest Version</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Application Scripts -->
+  <script src="js/lib/peerjs.min.js"></script>
   <script src="js/rewardData.js"></script>
   <script src="js/confetti.js"></script>
   <script src="js/audio.js"></script>
@@ -579,6 +853,8 @@
   <script src="js/schedule.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/diary.js"></script>
+  <script src="js/liveShare.js"></script>
+  <script src="js/updater.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

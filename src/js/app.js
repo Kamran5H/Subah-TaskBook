@@ -188,6 +188,11 @@ class SubahApp {
     if (tabName === "diary" && window.subahDiary) {
       window.subahDiary.updateData(this.appData.tasksByDate, this.todayDate, this.appData.streak);
     }
+
+    // Refresh live share when switching to live-share tab
+    if (tabName === "live-share" && window.SubahLiveShare) {
+      window.SubahLiveShare.renderMyTasksPreview();
+    }
   }
 
   renderDates() {

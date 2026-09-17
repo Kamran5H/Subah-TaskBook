@@ -1,20 +1,28 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, globalShortcut, shell, nativeImage, screen } = require("electron");
+const electron = require("electron");
+const { app, BrowserWindow, ipcMain, Tray, Menu, globalShortcut, shell, nativeImage, screen } = (typeof electron === "object" && electron) ? electron : {};
 const path = require("path");
 const fs = require("fs");
 const http = require("http");
+const https = require("https");
+const { spawn } = require("child_process");
+const pkg = require("./package.json");
+const APP_VERSION = pkg.version || "1.0.0";
+const GITHUB_REPO = "Kamran5H/Subah-TaskBook";
 
 // Enforce single instance lock so only one instance runs
-const gotTheLock = app.requestSingleInstanceLock();
-if (!gotTheLock) {
-  app.quit();
-} else {
-  app.on("second-instance", () => {
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.show();
-      mainWindow.focus();
-    }
-  });
+if (app && app.requestSingleInstanceLock) {
+  const gotTheLock = app.requestSingleInstanceLock();
+  if (!gotTheLock) {
+    app.quit();
+  } else {
+    app.on("second-instance", () => {
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    });
+  }
 }
 
 let mainWindow = null;
@@ -22,7 +30,9 @@ let tray = null;
 let forceQuit = false;
 
 // Remove default Chromium menu bar
-Menu.setApplicationMenu(null);
+if (Menu && Menu.setApplicationMenu) {
+  Menu.setApplicationMenu(null);
+}
 
 // Helpers for Data Storage & Rollover Logic
 const {
@@ -518,60 +528,121 @@ function syncStartupSettings(openAtLogin) {
 }
 
 // App Initialization
-app.whenReady().then(async () => {
-  try {
-    cleanupRogueDevStartup();
-    await startRendererServer();
-    createWindow();
-    createTray();
+if (app && app.whenReady) {
+  app.whenReady().then(async () => {
+    try {
+      cleanupRogueDevStartup();
+      await startRendererServer();
+      createWindow();
+      createTray();
 
-    // Register Global Hotkey: Ctrl+Shift+T (instant toggle without restrictions)
-    globalShortcut.register("CommandOrControl+Shift+T", () => {
-      if (mainWindow) {
-        if (mainWindow.isVisible()) {
-          mainWindow.hide();
-        } else {
+      // Register Global Hotkey: Ctrl+Shift+T (instant toggle without restrictions)
+      if (globalShortcut && globalShortcut.register) {
+        globalShortcut.register("CommandOrControl+Shift+T", () => {
+          if (mainWindow) {
+            if (mainWindow.isVisible()) {
+              mainWindow.hide();
+            } else {
+              mainWindow.show();
+              mainWindow.focus();
+            }
+          }
+        });
+      }
+
+      // Sync Windows login startup setting & create daily rolling snapshot
+      const appData = loadAppData();
+      createRollingSnapshot(appData);
+      if (appData.settings && typeof appData.settings.openAtLogin === "boolean") {
+        syncStartupSettings(appData.settings.openAtLogin);
+      }
+
+      app.on("activate", () => {
+        if (mainWindow) {
+          if (mainWindow.isMinimized()) mainWindow.restore();
           mainWindow.show();
           mainWindow.focus();
+        } else if (BrowserWindow && BrowserWindow.getAllWindows().length === 0) {
+          createWindow();
         }
-      }
-    });
-
-    // Sync Windows login startup setting & create daily rolling snapshot
-    const appData = loadAppData();
-    createRollingSnapshot(appData);
-    if (appData.settings && typeof appData.settings.openAtLogin === "boolean") {
-      syncStartupSettings(appData.settings.openAtLogin);
+      });
+    } catch (err) {
+      console.error("Error during app.whenReady:", err);
     }
+  });
 
-    app.on("activate", () => {
-      if (mainWindow) {
-        if (mainWindow.isMinimized()) mainWindow.restore();
-        mainWindow.show();
-        mainWindow.focus();
-      } else if (BrowserWindow.getAllWindows().length === 0) {
-        createWindow();
+  app.on("window-all-closed", (e) => {
+    if (!forceQuit) {
+      if (e && e.preventDefault) e.preventDefault();
+    } else {
+      app.quit();
+    }
+  });
+
+  app.on("will-quit", () => {
+    if (globalShortcut && globalShortcut.unregisterAll) {
+      globalShortcut.unregisterAll();
+    }
+  });
+}
+
+// --- In-App Auto-Updater Helpers ---
+
+function compareVersions(v1, v2) {
+  const clean1 = (v1 || "").replace(/^v/i, "").trim();
+  const clean2 = (v2 || "").replace(/^v/i, "").trim();
+  const p1 = clean1.split(".").map(n => parseInt(n, 10) || 0);
+  const p2 = clean2.split(".").map(n => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(p1.length, p2.length); i++) {
+    const num1 = p1[i] || 0;
+    const num2 = p2[i] || 0;
+    if (num1 > num2) return 1;
+    if (num1 < num2) return -1;
+  }
+  return 0;
+}
+
+function fetchJsonFromHttps(targetUrl) {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(targetUrl);
+    const opts = {
+      protocol: parsed.protocol,
+      hostname: parsed.hostname,
+      path: parsed.pathname + parsed.search,
+      headers: {
+        "User-Agent": `Subah-TaskBook/${APP_VERSION}`,
+        "Accept": "application/vnd.github.v3+json"
       }
+    };
+    const req = https.get(opts, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return fetchJsonFromHttps(res.headers.location).then(resolve).catch(reject);
+      }
+      if (res.statusCode === 404) {
+        return resolve(null);
+      }
+      if (res.statusCode !== 200) {
+        return reject(new Error(`HTTP ${res.statusCode}: ${res.statusMessage}`));
+      }
+      let raw = "";
+      res.on("data", chunk => raw += chunk);
+      res.on("end", () => {
+        try {
+          resolve(JSON.parse(raw));
+        } catch (e) {
+          reject(e);
+        }
+      });
     });
-  } catch (err) {
-    console.error("Error during app.whenReady:", err);
-  }
-});
-
-app.on("window-all-closed", (e) => {
-  if (!forceQuit) {
-    if (e && e.preventDefault) e.preventDefault();
-  } else {
-    app.quit();
-  }
-});
-
-app.on("will-quit", () => {
-  globalShortcut.unregisterAll();
-});
+    req.on("error", reject);
+    req.setTimeout(10000, () => {
+      req.destroy(new Error("Request timed out"));
+    });
+  });
+}
 
 // --- IPC Handlers ---
-
+if (ipcMain) {
 // Fetch app state
 ipcMain.handle("get-app-state", async () => {
   const data = loadAppData();
@@ -766,8 +837,148 @@ ipcMain.handle("save-reflection", async (event, { date, text }) => {
   return { success: true, reflectionsByDate: data.reflectionsByDate };
 });
 
+ipcMain.handle("get-app-version", () => {
+  return { version: APP_VERSION, repo: GITHUB_REPO };
+});
+
+ipcMain.handle("check-for-updates", async () => {
+  try {
+    const release = await fetchJsonFromHttps(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`);
+    if (!release || !release.tag_name) {
+      return {
+        success: true,
+        hasUpdate: false,
+        currentVersion: APP_VERSION,
+        message: "You are running the latest version of Subah."
+      };
+    }
+
+    const latestTag = release.tag_name.trim();
+    const hasUpdate = compareVersions(latestTag, APP_VERSION) > 0;
+
+    let downloadAsset = null;
+    if (Array.isArray(release.assets) && release.assets.length > 0) {
+      downloadAsset = release.assets.find(a => a.name.endsWith(".exe") || a.name.endsWith(".zip")) || release.assets[0];
+    }
+
+    return {
+      success: true,
+      hasUpdate,
+      currentVersion: APP_VERSION,
+      latestVersion: latestTag,
+      releaseName: release.name || latestTag,
+      releaseNotes: release.body || "No detailed release notes provided.",
+      publishedAt: release.published_at,
+      releaseUrl: release.html_url,
+      downloadUrl: downloadAsset ? downloadAsset.browser_download_url : (release.zipball_url || release.html_url),
+      assetName: downloadAsset ? downloadAsset.name : `Subah-${latestTag}.zip`,
+      assetSize: downloadAsset ? downloadAsset.size : null
+    };
+  } catch (err) {
+    console.warn("Could not check GitHub releases:", err.message);
+    return {
+      success: false,
+      hasUpdate: false,
+      currentVersion: APP_VERSION,
+      error: err.message
+    };
+  }
+});
+
+ipcMain.handle("download-update", async (event, downloadUrl) => {
+  if (!downloadUrl || (!downloadUrl.startsWith("https://") && !downloadUrl.startsWith("http://"))) {
+    return { success: false, error: "Invalid download URL" };
+  }
+
+  try {
+    const userDataPath = app.getPath("userData");
+    const updatesDir = path.join(userDataPath, "updates");
+    if (!fs.existsSync(updatesDir)) {
+      fs.mkdirSync(updatesDir, { recursive: true });
+    }
+
+    const parsedUrl = new URL(downloadUrl);
+    const filename = path.basename(parsedUrl.pathname) || "Subah-Update.zip";
+    const destPath = path.join(updatesDir, filename);
+
+    return new Promise((resolve) => {
+      function downloadFile(url) {
+        const req = https.get(url, {
+          headers: { "User-Agent": `Subah-TaskBook/${APP_VERSION}` }
+        }, (res) => {
+          if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+            return downloadFile(res.headers.location);
+          }
+          if (res.statusCode !== 200) {
+            return resolve({ success: false, error: `Download failed: HTTP ${res.statusCode}` });
+          }
+
+          const totalBytes = parseInt(res.headers["content-length"] || "0", 10);
+          let receivedBytes = 0;
+          const fileStream = fs.createWriteStream(destPath);
+
+          res.on("data", (chunk) => {
+            receivedBytes += chunk.length;
+            fileStream.write(chunk);
+            if (event.sender && !event.sender.isDestroyed()) {
+              const percent = totalBytes > 0 ? Math.round((receivedBytes / totalBytes) * 100) : 50;
+              event.sender.send("update-download-progress", {
+                percent,
+                receivedBytes,
+                totalBytes
+              });
+            }
+          });
+
+          res.on("end", () => {
+            fileStream.end(() => {
+              resolve({
+                success: true,
+                filePath: destPath,
+                filename: filename
+              });
+            });
+          });
+
+          res.on("error", (e) => {
+            fileStream.destroy();
+            resolve({ success: false, error: e.message });
+          });
+        });
+
+        req.on("error", (e) => {
+          resolve({ success: false, error: e.message });
+        });
+      }
+
+      downloadFile(downloadUrl);
+    });
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle("apply-update-and-restart", async (event, filePath) => {
+  try {
+    if (filePath && fs.existsSync(filePath) && filePath.endsWith(".exe")) {
+      spawn(filePath, [], { detached: true, stdio: "ignore" }).unref();
+      forceQuit = true;
+      app.quit();
+      return { success: true };
+    }
+
+    app.relaunch();
+    forceQuit = true;
+    app.quit();
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+}
+
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { rollOverPendingTasks, applyDailyStreak };
+  module.exports = { rollOverPendingTasks, applyDailyStreak, compareVersions };
 }
 
 

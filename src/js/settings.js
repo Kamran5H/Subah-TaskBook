@@ -65,6 +65,46 @@ class SubahSettings {
       btnExport.addEventListener("click", () => this.handleExportBackup());
     }
 
+    // Auto-update toggle
+    const autoUpdateToggle = document.getElementById("toggle-auto-updates");
+    if (autoUpdateToggle) {
+      autoUpdateToggle.checked = this.settings.autoCheckUpdates !== false;
+      autoUpdateToggle.addEventListener("change", async (e) => {
+        this.settings.autoCheckUpdates = e.target.checked;
+        await window.subahAPI.saveSettings({ autoCheckUpdates: this.settings.autoCheckUpdates });
+        window.subahApp.showToast(this.settings.autoCheckUpdates ? "Automatic update checks enabled" : "Automatic update checks disabled");
+      });
+    }
+
+    // Manual update check button
+    const btnCheckUpdates = document.getElementById("btn-check-updates-now");
+    if (btnCheckUpdates) {
+      btnCheckUpdates.addEventListener("click", async () => {
+        const origText = btnCheckUpdates.innerHTML;
+        btnCheckUpdates.disabled = true;
+        btnCheckUpdates.innerHTML = `<span>⏳ Checking...</span>`;
+
+        if (window.SubahUpdater) {
+          const res = await window.SubahUpdater.checkForUpdates({ silent: false });
+          const pill = document.getElementById("settings-version-pill");
+          if (pill) {
+            if (res && res.hasUpdate) {
+              pill.className = "update-status-pill available";
+              pill.textContent = `Update available: ${res.latestVersion}`;
+              pill.onclick = () => window.SubahUpdater.openModal(res);
+            } else {
+              pill.className = "update-status-pill up-to-date";
+              pill.textContent = `v${window.SubahUpdater.currentVersion} (Latest)`;
+              pill.onclick = null;
+            }
+          }
+        }
+
+        btnCheckUpdates.disabled = false;
+        btnCheckUpdates.innerHTML = origText;
+      });
+    }
+
     // Import Backup JSON
     const btnImportTrigger = document.getElementById("btn-import-backup-trigger");
     const fileInput = document.getElementById("input-import-backup-file");

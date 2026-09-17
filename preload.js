@@ -22,5 +22,14 @@ contextBridge.exposeInMainWorld("subahAPI", {
   // Tray/Main events
   onNavigateTab: (callback) => {
     ipcRenderer.on("navigate-tab", (event, tab) => callback(tab));
+  },
+
+  // Software In-App Updates
+  getAppVersion: () => ipcRenderer.invoke("get-app-version"),
+  checkForUpdates: () => ipcRenderer.invoke("check-for-updates"),
+  downloadUpdate: (downloadUrl) => ipcRenderer.invoke("download-update", downloadUrl),
+  applyUpdateAndRestart: (filePath) => ipcRenderer.invoke("apply-update-and-restart", filePath),
+  onUpdateProgress: (callback) => {
+    ipcRenderer.on("update-download-progress", (event, data) => callback(data));
   }
 });
