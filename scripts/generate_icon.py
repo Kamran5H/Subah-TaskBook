@@ -26,7 +26,9 @@ def create_subah_icon():
     # Multi-resolution ICO (256, 128, 64, 48, 32, 16)
     ico_sizes = [(256, 256), (128, 128), (64, 64), (48, 48), (32, 32), (16, 16)]
     img.save(os.path.join(assets_dir, "icon.ico"), format="ICO", sizes=ico_sizes)
-    print("Icons successfully verified & refreshed: assets/icon.png, src/assets/icon.png, assets/icon.ico")
+    img.save(os.path.join(src_assets_dir, "icon.ico"), format="ICO", sizes=ico_sizes)
+    img.save(os.path.join(project_root, "src", "favicon.ico"), format="ICO", sizes=ico_sizes)
+    print("Icons successfully verified & refreshed: assets/icon.png, src/assets/icon.png, assets/icon.ico, src/assets/icon.ico, src/favicon.ico")
 
 if __name__ == "__main__":
     create_subah_icon()

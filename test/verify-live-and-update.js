@@ -134,6 +134,27 @@ assert(indexHtml.includes("Kamran Ashraf"), "developer credit must remain presen
 assert(indexHtml.includes("signature-gold-text"), "developer credit must retain gold signature class");
 console.log("✓ Golden developer credit ('Kamran Ashraf') preserved without regression.");
 
+// 11. Test Icon Infrastructure & Web/System Integrations
+assert(mainSrc.includes("app.setAppUserModelId"), "main.js must set AppUserModelId for Windows taskbar grouping and icons");
+assert(mainSrc.includes("com.kamranashraf.subahtaskbook"), "AppUserModelId must identify Subah TaskBook");
+assert(indexHtml.includes('rel="icon"'), "index.html must contain favicon rel=icon link");
+assert(indexHtml.includes('rel="shortcut icon"'), "index.html must contain shortcut icon link");
+assert(fs.existsSync(path.join(ROOT, "src", "assets", "icon.ico")), "src/assets/icon.ico must exist");
+assert(fs.existsSync(path.join(ROOT, "src", "favicon.ico")), "src/favicon.ico must exist for loopback HTTP server");
+console.log("✓ Icon infrastructure verified across Electron taskbar, system tray, and HTTP renderer.");
+
+// 12. Test Desktop Shortcut Generation & Script
+const shortcutPs1 = fs.readFileSync(path.join(ROOT, "scripts", "create_desktop_shortcut.ps1"), "utf-8");
+assert(shortcutPs1.includes("assets\\icon.ico"), "create_desktop_shortcut.ps1 must link assets\\icon.ico");
+assert(shortcutPs1.includes("Subah.lnk"), "create_desktop_shortcut.ps1 must generate Subah.lnk");
+assert(shortcutPs1.includes("WScript.Shell"), "create_desktop_shortcut.ps1 must use WScript.Shell for COM shortcut creation");
+console.log("✓ Desktop shortcut generation script and icon location verified.");
+
+// 13. Test Updater Modal Brand Icon Integration
+assert(indexHtml.includes("updater-app-icon"), "index.html must render updater-app-icon in updater modal");
+assert(updaterCss.includes(".updater-app-icon"), "updater.css must style .updater-app-icon");
+console.log("✓ In-App Updater modal brand icon integration verified.");
+
 console.log("\n==================================================");
 console.log("   ALL LIVE SHARE & UPDATER TESTS PASSED!         ");
 console.log("==================================================\n");

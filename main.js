@@ -9,6 +9,11 @@ const pkg = require("./package.json");
 const APP_VERSION = pkg.version || "1.0.0";
 const GITHUB_REPO = "Kamran5H/Subah-TaskBook";
 
+// Register App User Model ID so Windows taskbar groups and shows custom icon properly
+if (app && app.setAppUserModelId) {
+  app.setAppUserModelId("com.kamranashraf.subahtaskbook");
+}
+
 // Enforce single instance lock so only one instance runs
 if (app && app.requestSingleInstanceLock) {
   const gotTheLock = app.requestSingleInstanceLock();
@@ -164,13 +169,17 @@ function saveAppData(data) {
 }
 
 function getAppIcon() {
+  if (!nativeImage || !nativeImage.createFromPath) return undefined;
   const icoPath = path.join(__dirname, "assets", "icon.ico");
   const pngPath = path.join(__dirname, "assets", "icon.png");
-  if (fs.existsSync(icoPath)) {
+  if (process.platform === "win32" && fs.existsSync(icoPath)) {
     return nativeImage.createFromPath(icoPath);
   }
   if (fs.existsSync(pngPath)) {
     return nativeImage.createFromPath(pngPath);
+  }
+  if (fs.existsSync(icoPath)) {
+    return nativeImage.createFromPath(icoPath);
   }
   return undefined;
 }
@@ -217,6 +226,15 @@ function startRendererServer() {
 
       fs.readFile(filePath, (err, buf) => {
         if (err) {
+          // Fallback for root icon requests
+          if (urlPath === "/favicon.ico" || urlPath === "/assets/icon.ico") {
+            const fallbackIco = path.join(__dirname, "assets", "icon.ico");
+            if (fs.existsSync(fallbackIco)) {
+              res.writeHead(200, { "Content-Type": "image/x-icon", "Cache-Control": "no-store" });
+              res.end(fs.readFileSync(fallbackIco));
+              return;
+            }
+          }
           res.writeHead(404).end("Not found");
           return;
         }
@@ -300,6 +318,9 @@ function createWindow() {
   }
 
   mainWindow = new BrowserWindow(windowOpts);
+  if (iconImg && mainWindow.setIcon) {
+    mainWindow.setIcon(iconImg);
+  }
 
   let boundsSaveTimer = null;
   const debouncedSaveBounds = () => {
@@ -468,7 +489,9 @@ function createTray() {
     const pngPath = path.join(__dirname, "assets", "icon.png");
     let trayIcon = null;
 
-    if (fs.existsSync(pngPath)) {
+    if (process.platform === "win32" && fs.existsSync(icoPath)) {
+      trayIcon = nativeImage.createFromPath(icoPath);
+    } else if (fs.existsSync(pngPath)) {
       trayIcon = nativeImage.createFromPath(pngPath).resize({ width: 16, height: 16 });
     } else if (fs.existsSync(icoPath)) {
       trayIcon = nativeImage.createFromPath(icoPath);
