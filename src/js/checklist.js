@@ -456,22 +456,31 @@ class SubahChecklist {
     await this.persist();
 
     // Persist to tomorrow in schedule / backend
+    let tmrwTasks = [];
     if (window.subahSchedule && window.subahSchedule.tasksByDate) {
       if (!window.subahSchedule.tasksByDate[tmrw]) window.subahSchedule.tasksByDate[tmrw] = [];
       window.subahSchedule.tasksByDate[tmrw].push(task);
-      await window.subahAPI.updateTasks({ date: tmrw, tasks: window.subahSchedule.tasksByDate[tmrw] });
+      tmrwTasks = window.subahSchedule.tasksByDate[tmrw];
+      await window.subahAPI.updateTasks({ date: tmrw, tasks: tmrwTasks });
       window.subahSchedule.renderCalendar();
       window.subahSchedule.renderSelectedDayTasks();
     } else {
       const appState = await window.subahAPI.getAppState();
-      const tmrwTasks = (appState.tasksByDate && appState.tasksByDate[tmrw]) || [];
+      tmrwTasks = (appState.tasksByDate && appState.tasksByDate[tmrw]) || [];
       tmrwTasks.push(task);
       await window.subahAPI.updateTasks({ date: tmrw, tasks: tmrwTasks });
     }
 
+    if (window.subahApp && typeof window.subahApp.onTasksUpdated === "function") {
+      window.subahApp.onTasksUpdated(tmrw, tmrwTasks);
+    }
+    if (window.SubahLiveShare) {
+      window.SubahLiveShare.broadcastTasksUpdate();
+    }
+
     window.subahAudio.playClick();
     this.render();
-    window.subahApp.showToast("Task deferred to tomorrow 🌅");
+    window.subahApp.showToast("Task deferred to tomorrow 🌅", "info");
   }
 
   async deleteTask(taskId) {

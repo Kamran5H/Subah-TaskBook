@@ -369,6 +369,64 @@ assert(mainSrc.includes("pinned: Boolean(t.pinned)"), "commit-morning-tasks must
 assert(mainSrc.includes("typeof parsed.json === \"string\""), "import-backup must safely unwrap nested json format");
 console.log("✓ main.js unwrapped backup import and pinned morning task preservation verified.");
 
+// 16. Test SubahApp state getter and showToast signature resilience
+const appSrc = fs.readFileSync(path.join(srcJsDir, "app.js"), "utf-8");
+const appContext = {
+  window: {},
+  document: {
+    getElementById: () => ({ appendChild: () => {}, querySelector: () => null, querySelectorAll: () => [] }),
+    querySelectorAll: () => [],
+    addEventListener: () => {}
+  },
+  setTimeout: (fn, delay) => {
+    // Assert delay is a valid number >= 1000 and not NaN or 0
+    assert(typeof delay === "number" && !isNaN(delay) && delay >= 1000, "showToast duration must be a valid positive number >= 1000ms");
+    return 1;
+  }
+};
+vm.createContext(appContext);
+vm.runInContext(appSrc, appContext);
+const subahApp = appContext.window.subahApp;
+assert(subahApp, "window.subahApp must be instantiated");
+
+// Test state getter
+subahApp.appData = { streak: 7, todayDate: "2026-09-17", tasksByDate: {} };
+assert.strictEqual(subahApp.state, subahApp.appData, "subahApp.state getter must return subahApp.appData");
+console.log("✓ SubahApp state getter accurately reflects appData.");
+
+// Test showToast with duration only
+let createdToast = null;
+appContext.document.createElement = (tag) => {
+  const el = { tagName: tag, className: "", style: {}, appendChild: () => {}, remove: () => {} };
+  if (tag === "div") createdToast = el;
+  return el;
+};
+subahApp.toastContainer = { appendChild: () => {} };
+
+subahApp.showToast("Test duration", 2500);
+assert(createdToast.className.includes("toast"), "Toast must have base toast class");
+assert(createdToast.className.includes("toast-info"), "Toast without type must default to toast-info");
+
+// Test showToast with string type ("error", "success", "warning")
+subahApp.showToast("Connection failed", "error");
+assert(createdToast.className.includes("toast-error"), "Toast with error type must have toast-error class");
+
+subahApp.showToast("Goal achieved", "success", 4000);
+assert(createdToast.className.includes("toast-success"), "Toast with success type must have toast-success class");
+console.log("✓ showToast supports flexible (msg, duration) and (msg, type, duration) without premature dismissal.");
+
+// 17. Test deferToTomorrow and moveToToday cross-module synchronization
+assert(checklistSrc.includes("window.subahApp.onTasksUpdated(tmrw"), "checklist.deferToTomorrow must notify onTasksUpdated for tomorrow");
+assert(scheduleSrc.includes("window.subahApp.onTasksUpdated(this.selectedDate"), "schedule.moveToToday must notify onTasksUpdated for selectedDate");
+assert(scheduleSrc.includes("completedTaskText: task.text"), "schedule.toggleTaskCompletion must broadcast completed task to Live Share");
+console.log("✓ Cross-tab task synchronization verified (deferToTomorrow, moveToToday, liveShare broadcast).");
+
+// 18. Test main.js tray menu unminimize restore
+const trayMenuCode = mainSrc.slice(mainSrc.indexOf("function updateTrayMenu()"), mainSrc.indexOf("function createTray()"));
+const restoreMatches = (trayMenuCode.match(/if \(mainWindow\.isMinimized\(\)\) mainWindow\.restore\(\);/g) || []).length;
+assert(restoreMatches >= 5, `All tray navigation actions must restore minimized windows (found ${restoreMatches})`);
+console.log("✓ main.js tray menu unminimize restore verified for all navigation items.");
+
 console.log("\n==================================================");
 console.log("   ALL DEEP SCRUTINY VERIFICATIONS PASSED!        ");
 console.log("==================================================\n");

@@ -429,6 +429,7 @@ function updateTrayMenu() {
         label: "📅 Schedule & Calendar Tasks",
         click: () => {
           if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
             mainWindow.show();
             mainWindow.focus();
             mainWindow.webContents.send("navigate-tab", "schedule");
@@ -439,6 +440,7 @@ function updateTrayMenu() {
         label: "🎁 Surprise Reward Sanctuary",
         click: () => {
           if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
             mainWindow.show();
             mainWindow.focus();
             mainWindow.webContents.send("navigate-tab", "rewards");
@@ -449,6 +451,7 @@ function updateTrayMenu() {
         label: "📖 Task Diary & History",
         click: () => {
           if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
             mainWindow.show();
             mainWindow.focus();
             mainWindow.webContents.send("navigate-tab", "diary");
@@ -459,6 +462,7 @@ function updateTrayMenu() {
         label: "⚙️ Preferences",
         click: () => {
           if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
             mainWindow.show();
             mainWindow.focus();
             mainWindow.webContents.send("navigate-tab", "settings");
@@ -628,6 +632,7 @@ function compareVersions(v1, v2) {
 function fetchJsonFromHttps(targetUrl) {
   return new Promise((resolve, reject) => {
     const parsed = new URL(targetUrl);
+    const client = parsed.protocol === "http:" ? http : https;
     const opts = {
       protocol: parsed.protocol,
       hostname: parsed.hostname,
@@ -637,9 +642,10 @@ function fetchJsonFromHttps(targetUrl) {
         "Accept": "application/vnd.github.v3+json"
       }
     };
-    const req = https.get(opts, (res) => {
+    const req = client.get(opts, (res) => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        return fetchJsonFromHttps(res.headers.location).then(resolve).catch(reject);
+        const nextUrl = new URL(res.headers.location, targetUrl).toString();
+        return fetchJsonFromHttps(nextUrl).then(resolve).catch(reject);
       }
       if (res.statusCode === 404) {
         return resolve(null);
@@ -952,11 +958,14 @@ ipcMain.handle("download-update", async (event, downloadUrl) => {
 
     return new Promise((resolve) => {
       function downloadFile(url) {
-        const req = https.get(url, {
+        const parsed = new URL(url);
+        const client = parsed.protocol === "http:" ? http : https;
+        const req = client.get(url, {
           headers: { "User-Agent": `Subah-TaskBook/${APP_VERSION}` }
         }, (res) => {
           if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-            return downloadFile(res.headers.location);
+            const nextUrl = new URL(res.headers.location, url).toString();
+            return downloadFile(nextUrl);
           }
           if (res.statusCode !== 200) {
             return resolve({ success: false, error: `Download failed: HTTP ${res.statusCode}` });
@@ -1009,11 +1018,16 @@ ipcMain.handle("download-update", async (event, downloadUrl) => {
 
 ipcMain.handle("apply-update-and-restart", async (event, filePath) => {
   try {
-    if (filePath && fs.existsSync(filePath) && filePath.endsWith(".exe")) {
-      spawn(filePath, [], { detached: true, stdio: "ignore" }).unref();
-      forceQuit = true;
-      app.quit();
-      return { success: true };
+    if (filePath && fs.existsSync(filePath)) {
+      if (filePath.endsWith(".exe")) {
+        spawn(filePath, [], { detached: true, stdio: "ignore" }).unref();
+        forceQuit = true;
+        app.quit();
+        return { success: true };
+      }
+      if (shell && shell.showItemInFolder) {
+        shell.showItemInFolder(filePath);
+      }
     }
 
     app.relaunch();

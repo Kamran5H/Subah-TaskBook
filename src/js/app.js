@@ -8,6 +8,10 @@ class SubahApp {
     this.currentTab = "checklist";
   }
 
+  get state() {
+    return this.appData;
+  }
+
   async init() {
     this.toastContainer = document.getElementById("toast-container");
 
@@ -186,7 +190,7 @@ class SubahApp {
 
     // Refresh diary when switching to diary tab
     if (tabName === "diary" && window.subahDiary) {
-      window.subahDiary.updateData(this.appData.tasksByDate, this.todayDate, this.appData.streak);
+      window.subahDiary.updateData(this.appData.tasksByDate, this.todayDate, this.appData.streak || 1, this.appData.reflectionsByDate || {});
     }
 
     // Refresh live share when switching to live-share tab
@@ -238,11 +242,23 @@ class SubahApp {
     }
   }
 
-  showToast(message, duration = 3000) {
+  showToast(message, typeOrDuration = 3000, maybeDuration = 3000) {
     if (!this.toastContainer) return;
 
+    let toastType = "info";
+    let duration = 3000;
+
+    if (typeof typeOrDuration === "number") {
+      duration = typeOrDuration;
+    } else if (typeof typeOrDuration === "string") {
+      toastType = typeOrDuration;
+      if (typeof maybeDuration === "number") {
+        duration = maybeDuration;
+      }
+    }
+
     const toast = document.createElement("div");
-    toast.className = "toast";
+    toast.className = `toast toast-${toastType}`;
     // textContent, not innerHTML: toast messages can interpolate task text / dates,
     // so never let them be parsed as markup.
     const span = document.createElement("span");

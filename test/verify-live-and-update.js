@@ -2,6 +2,7 @@
 const assert = require("assert");
 const fs = require("fs");
 const path = require("path");
+const vm = require("vm");
 const ROOT = path.join(__dirname, "..");
 
 console.log("==================================================");
@@ -154,6 +155,58 @@ console.log("✓ Desktop shortcut generation script and icon location verified."
 assert(indexHtml.includes("updater-app-icon"), "index.html must render updater-app-icon in updater modal");
 assert(updaterCss.includes(".updater-app-icon"), "updater.css must style .updater-app-icon");
 console.log("✓ In-App Updater modal brand icon integration verified.");
+
+// 14. Test LiveShare getMyShareableState with checklist and appData
+const liveShareMockContext = {
+  window: {
+    subahApp: {
+      appData: {
+        streak: 12,
+        todayDate: "2026-09-17",
+        tasksByDate: {
+          "2026-09-17": [
+            { id: "task-1", text: "Morning Dhikr & Quran", completed: true, isPrivate: false },
+            { id: "task-2", text: "Private Journal Entry", completed: false, isPrivate: true }
+          ]
+        }
+      }
+    },
+    subahChecklist: {
+      todayDate: "2026-09-17",
+      tasks: [
+        { id: "task-1", text: "Morning Dhikr & Quran", completed: true, isPrivate: false },
+        { id: "task-2", text: "Private Journal Entry", completed: false, isPrivate: true },
+        { id: "task-3", text: "Gym Session", completed: false, isPrivate: false }
+      ]
+    }
+  },
+  document: {
+    getElementById: () => null,
+    querySelectorAll: () => [],
+    addEventListener: () => {}
+  },
+  Date,
+  Math,
+  Array,
+  console
+};
+vm.createContext(liveShareMockContext);
+vm.runInContext(liveShareSrc, liveShareMockContext);
+const liveShare = liveShareMockContext.window.SubahLiveShare;
+assert(liveShare, "window.SubahLiveShare must be instantiated");
+
+const myLivePayload = liveShare.getMyShareableState();
+assert.strictEqual(myLivePayload.streak, 12, "Streak must match appData streak");
+assert.strictEqual(myLivePayload.tasks.length, 2, "Only non-private tasks should be in shareable tasks");
+assert.strictEqual(myLivePayload.tasks[0].id, "task-1");
+assert.strictEqual(myLivePayload.tasks[1].id, "task-3");
+assert.strictEqual(myLivePayload.completedCount, 1, "Completed count must be 1");
+console.log("✓ liveShare.getMyShareableState seamlessly integrates with live checklist and appData.");
+
+// 15. Test Relative Redirect Resolution in Updater
+assert(mainSrc.includes("new URL(res.headers.location, targetUrl).toString()"), "fetchJsonFromHttps must resolve relative redirect URLs");
+assert(mainSrc.includes("new URL(res.headers.location, url).toString()"), "downloadFile must resolve relative redirect URLs");
+console.log("✓ Relative redirect URL resolution verified for in-app software updates.");
 
 console.log("\n==================================================");
 console.log("   ALL LIVE SHARE & UPDATER TESTS PASSED!         ");

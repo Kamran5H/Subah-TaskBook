@@ -383,6 +383,26 @@ button, a, .window-btn, .nav-tab-btn, .filter-pill-btn, .theme-card-btn, .switch
   pointer-events: auto;
 }
 
+.toast.toast-success {
+  border-color: rgba(52, 211, 153, 0.6);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 20px rgba(52, 211, 153, 0.3);
+}
+
+.toast.toast-error {
+  border-color: rgba(244, 63, 94, 0.6);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 20px rgba(244, 63, 94, 0.3);
+}
+
+.toast.toast-warning {
+  border-color: rgba(251, 191, 36, 0.6);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 20px rgba(251, 191, 36, 0.3);
+}
+
+.toast.toast-info {
+  border-color: var(--border-accent);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), var(--glow-accent);
+}
+
 @keyframes toastSlideIn {
   from { opacity: 0; transform: translateY(12px) scale(0.95); }
   to { opacity: 1; transform: translateY(0) scale(1); }

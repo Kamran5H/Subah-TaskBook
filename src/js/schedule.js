@@ -501,13 +501,17 @@ class SubahSchedule {
       window.subahChecklist.setData(this.todayDate, this.tasksByDate[this.todayDate], res && res.streak);
     }
     if (window.subahApp && typeof window.subahApp.onTasksUpdated === "function") {
+      window.subahApp.onTasksUpdated(this.selectedDate, this.tasksByDate[this.selectedDate]);
       window.subahApp.onTasksUpdated(this.todayDate, this.tasksByDate[this.todayDate], res && res.streak);
+    }
+    if (window.SubahLiveShare) {
+      window.SubahLiveShare.broadcastTasksUpdate();
     }
 
     window.subahAudio.playClick();
     this.renderCalendar();
     this.renderSelectedDayTasks();
-    window.subahApp.showToast("Task moved to Today's Goals ☀️");
+    window.subahApp.showToast("Task moved to Today's Goals ☀️", "success");
   }
 
   async handleAddTask() {
@@ -586,7 +590,7 @@ class SubahSchedule {
 
       if (window.subahAudio) window.subahAudio.playCelebration();
 
-      // If completing on today, trigger confetti burst and reward modal
+      // If completing on today, trigger confetti burst, reward modal, and live share
       if (this.selectedDate === this.todayDate) {
         if (window.subahConfetti) {
           window.subahConfetti.burst(window.innerWidth / 2, window.innerHeight * 0.45, 90);
@@ -594,10 +598,16 @@ class SubahSchedule {
         if (window.subahRewards) {
           window.subahRewards.presentSurpriseReward(task);
         }
+        if (window.SubahLiveShare) {
+          window.SubahLiveShare.broadcastTasksUpdate({ completedTaskText: task.text });
+        }
       }
     } else {
       delete task.completedAt;
       if (window.subahAudio) window.subahAudio.playClick();
+      if (this.selectedDate === this.todayDate && window.SubahLiveShare) {
+        window.SubahLiveShare.broadcastTasksUpdate();
+      }
     }
 
     this.renderCalendar();
@@ -667,6 +677,9 @@ class SubahSchedule {
     // If the edited date is Today, also live-update the checklist tab
     if (this.selectedDate === this.todayDate && window.subahChecklist) {
       window.subahChecklist.setData(this.todayDate, currentTasks, res && res.streak);
+    }
+    if (this.selectedDate === this.todayDate && window.SubahLiveShare) {
+      window.SubahLiveShare.broadcastTasksUpdate();
     }
   }
 

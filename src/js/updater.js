@@ -27,7 +27,7 @@
 
       // Check automatically on boot after 3 seconds if enabled in settings
       setTimeout(() => {
-        const appState = (window.subahApp && window.subahApp.state) || {};
+        const appState = (window.subahApp && (window.subahApp.appData || window.subahApp.state)) || {};
         const settings = appState.settings || {};
         if (settings.autoCheckUpdates !== false) {
           this.checkForUpdates({ silent: true });

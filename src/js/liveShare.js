@@ -332,9 +332,11 @@
     },
 
     getMyShareableState() {
-      const appState = (window.subahApp && window.subahApp.state) || {};
-      const todayDate = (window.subahChecklist && window.subahChecklist.todayDate) || new Date().toISOString().split("T")[0];
-      const allTasks = (appState.tasksByDate && appState.tasksByDate[todayDate]) || [];
+      const appData = (window.subahApp && (window.subahApp.appData || window.subahApp.state)) || {};
+      const todayDate = (window.subahChecklist && window.subahChecklist.todayDate) || (window.subahApp && window.subahApp.todayDate) || new Date().toISOString().split("T")[0];
+      const allTasks = (window.subahChecklist && Array.isArray(window.subahChecklist.tasks) && window.subahChecklist.tasks.length > 0)
+        ? window.subahChecklist.tasks
+        : ((appData.tasksByDate && appData.tasksByDate[todayDate]) || []);
 
       // Filter out private tasks (selective privacy)
       const shareableTasks = allTasks.filter((t) => !t.isPrivate).map((t) => ({
@@ -349,7 +351,7 @@
 
       return {
         todayDate,
-        streak: appState.streak || 1,
+        streak: (appData.streak) || (window.subahChecklist && window.subahChecklist.streakNum ? parseInt(window.subahChecklist.streakNum.textContent, 10) : 1) || 1,
         tasks: shareableTasks,
         completedCount,
         totalCount: shareableTasks.length
@@ -559,9 +561,11 @@
       if (window.subahChecklist && Array.isArray(window.subahChecklist.tasks)) {
         const task = window.subahChecklist.tasks.find((t) => t.id === taskId);
         if (task && !task.isPrivate) {
+          const wasCompleted = Boolean(task.completed);
           window.subahChecklist.toggleTask(taskId);
           if (window.subahApp) {
-            window.subahApp.showToast(`🤝 ${this.peerDisplayName} checked off: "${task.text}"!`, "success");
+            const actionText = wasCompleted ? "marked pending" : "checked off";
+            window.subahApp.showToast(`🤝 ${this.peerDisplayName} ${actionText}: "${task.text}"!`, "success");
           }
         }
       }
