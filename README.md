@@ -1,142 +1,96 @@
-# 🌅 Subah — Daily Focus & Surprise Reward Book
+# 🌅 Subah — Daily Focus & Gamified Task Book
 
 <div align="center">
 
-![Electron 34](https://img.shields.io/badge/Electron-34.2.0-47848F?style=for-the-badge&logo=electron&logoColor=white)
-![Node.js](https://img.shields.io/badge/Runtime-Vanilla_ES6-339933?style=for-the-badge&logo=node.js&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-All_Tests_Passing-brightgreen?style=for-the-badge)
-![Dependencies](https://img.shields.io/badge/Dependencies-Zero_Runtime-blueviolet?style=for-the-badge)
-![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
-![Author](https://img.shields.io/badge/Developer-Kamran_Ashraf-FFD700?style=for-the-badge)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![Framework: Electron](https://img.shields.io/badge/Framework-Electron%20%7C%20Vanilla%20JS-47848F?style=for-the-badge&logo=electron&logoColor=white)](https://www.electronjs.org/)
+[![Offline First](https://img.shields.io/badge/Architecture-100%25%20Offline--First-10B981?style=for-the-badge)](https://github.com/Kamran5H/Subah-TaskBook)
+[![Productivity](https://img.shields.io/badge/Design-Continuous%20Rollover-F59E0B?style=for-the-badge)](https://github.com/Kamran5H/Subah-TaskBook)
+[![Gamification](https://img.shields.io/badge/Reward-Surprise%20Celebration%20Engine-EC4899?style=for-the-badge)](https://github.com/Kamran5H/Subah-TaskBook)
 
-**A high-performance, distraction-free desktop application engineered for daily discipline, intentional focus, spiritual reflection, and celebratory accomplishment.**
+**A distraction-free, offline-first daily focus console, personal life diary, and continuous rollover task book with gamified surprise rewards.**
+
+[Philosophy](#-philosophy) • [Key Features](#-key-features) • [Architecture](#-architecture) • [Quickstart](#-quick-start) • [License](#-license)
 
 </div>
 
 ---
 
-## 🌟 Executive Overview
+## 🌟 Philosophy
 
-**Subah (صبح)** is an artisanal productivity environment designed to turn every morning into an intentional, high-momentum launchpad. Unlike standard to-do lists that create anxiety or get ignored, Subah combines **an unlocked, responsive daily checklist**, **pinned tasks and priority cycling**, **a full interactive month schedule and calendar**, **autonomous pending task rollover**, **an interactive Life & Focus Diary with dual Gregorian/Hijri tracking**, and **delightful 5–10 minute celebratory rewards** (soulful naats, legendary qawwalis, serene melodies, guided box breathing, and practical daily wisdom).
+Most modern task managers fail because they create anxiety: rigid deadlines turn into overdue notifications, guilt piles up, and users abandon the app.
 
-Crafted with pure vanilla ES6 and Electron 34, Subah delivers instant startup times and zero runtime npm bloat.
+**Subah** (meaning *"Morning"* in Urdu/Arabic) is designed around compassion, focus, and organic flow. It embraces the reality of daily life:
+- **Continuous Rollover**: Uncompleted tasks from yesterday do not turn red or trigger shame—they gracefully carry forward into today's focus queue.
+- **Surprise Rewards**: Completing high-effort focus sessions triggers delightful, randomized gamified micro-celebrations and philosophical reflections.
+- **Life Diary Synthesis**: Seamlessly blends tactical daily checklists with a personal evening reflective journal.
 
 ---
 
-## ✨ Core Pillars & Feature Architecture
+## 🚀 Key Features
+
+- **🎯 Anchor Focus Mode**: Pin your #1 highest-priority task to the top of the interface, hiding distraction vectors until that objective is achieved.
+- **🔄 Frictionless Continuous Rollover**: Automatically migrates pending backlog items at midnight without cluttering your inbox or resetting streaks.
+- **🎉 Surprise Reward Engine**: Completing tasks triggers procedural confetti animations, motivational milestone badges, and surprise reward cards.
+- **🔒 100% Local & Sovereign**: Zero cloud accounts, zero tracking, and zero subscription paywalls. All task data and journal entries are encrypted and stored locally.
+- **📖 Integrated Life Diary**: Dedicated evening reflection mode to record gratitude, lessons learned, and breakthroughs.
+- **⚡ Lightweight Desktop Performance**: Zero idle CPU consumption with instant keyboard shortcuts (`Ctrl+N` new task, `Ctrl+D` toggle done).
+
+---
+
+## 🏗️ Architecture
 
 ```mermaid
-graph TD
-    A["🌅 Morning First Login"] --> B["📋 Today's Goals & Pinned Tasks<br>(Instant Hotkey Ctrl+Shift+T)"]
-    B --> C["📅 Schedule & Calendar<br>(Plan Ahead Any Month / Day)"]
-    B --> D["🎁 Surprise Unboxing<br>(Naat, Qawwali, Mashwara, Dua, Breathing)"]
-    B --> E["🔄 Continuous Task Rollover<br>(Carries forward pending work)"]
-    B --> F["📖 Life & Focus Diary<br>(Gregorian + Hijri Journaling & Downstream Resolution)"]
-    D --> G["🧘 In-App Cinema & Timer<br>(3/5/7/10/15 min Singing Bowl Bell & Guided Breathing)"]
+flowchart TD
+    A[Electron Main Process: main.js] <-->|Context Bridge & Preload: preload.js| B[Renderer UI: src/]
+    B --> C{Subah State Engine}
+    C --> D[Daily Focus Queue & Task Tree]
+    C --> E[Continuous Midnight Rollover Handler]
+    C --> F[Surprise Reward Celebration Emitter]
+    C --> G[Reflective Life Diary]
+    C <-->|Bi-directional Atomic Sync| H[(Encrypted Local Storage / JSON Vault)]
 ```
 
-### 1. 📋 Today's Goals & Task Checklist
-- **Fast Flexible Goal Adding**: Add goals with zero artificial friction or locking barriers.
-- **📌 Priority Pinning**: Pin crucial goals to stay at the absolute top of your day.
-- **Priority Cycling**: One-click cycle between `High 🔥`, `Normal`, and `Low` priority.
-- **Inline Editing & Quick Defer**: Double-click any task to edit inline, or click defer to move it cleanly to tomorrow.
+---
 
-### 2. 📅 Interactive Schedule & Month Calendar
-- **Full Interactive Calendar Grid**: View any month, click any day to inspect and plan tasks in advance.
-- **Task Indicator Dots**: Gold dots for pinned tasks, cyan for pending, emerald for completed.
-- **Quick Preset Chips**: Jump instantly to `Today`, `+1 Tomorrow`, `+3 Days`, `+1 Week`, or pick any date directly.
-- **Move to Today (☀️)**: Relocate any future or past scheduled task directly to today's goals with one click.
+## 📁 Repository Structure
 
-### 3. 🔄 Continuous Autonomous Task Rollover Series
-- **Never Lose Unfinished Goals**: Any task left uncompleted at midnight automatically chains forward to the next active day.
-- **Origin Date Tracing**: Carried-over tasks maintain an origin tag (e.g. `🔄 Carried from 2026-09-08`), giving you clear historical perspective without cluttering today's view.
-- **Downstream Completion Synchronization**: Checking off a carried task in the diary or schedule instantly updates historical completion analytics.
-
-### 4. 📖 Interactive Life & Focus Diary
-- **Dual Calendar Header**: Full support for standard Gregorian dates alongside traditional Hijri Islamic dating (e.g. *Rab. I 27, 1448 AH*).
-- **Retroactive Progress & Notes**: Review past days with live interactive checkboxes, completion percentages, and daily reflection gratitude journals.
-- **Downstream Resolution Engine**: Tasks carried forward and completed later reflect accurately as completed.
-- **Instant Search & Highlighting**: Fast search across tasks, tags, dates, and priorities with real-time mark highlighting.
-- **Markdown Export**: Export any single day's journal or the entire multi-year archive into portable Markdown.
-
-### 5. 🎁 Celebratory Rewards, Zen Cinema & Guided Breathing
-When you check off a task, Subah rewards your momentum with celebratory fanfare:
-- **Acoustic Fanfare & Confetti**: Radiant particle physics celebration upon task completion.
-- **3D Surprise Gift Unboxing**: Reveals a curated 5–10 minute break item from 8 distinct collections (53 items):
-  - 🕌 **Soulful Naat**: Timeless classics (*Faslon Ko Takalluf*, *Qasida Burda*, *Mustafa Jaan-e-Rehmat*, *Karam Mangta Hoon*, *Main Tou Panjtan Ka Ghulam Hoon*).
-  - 🎶 **Legendary Qawwali**: Deep Sufi musical traditions (*Tajdar-e-Haram*, *Chaap Tilak*, *Dam Mast Qalandar*, *Woh Hata Rahe Hain Parda*, *Allah Hoo*).
-  - 🎵 **Soulful Melodies**: Turkish Ney Flute, bamboo meditations, and gentle acoustic rain.
-  - 💡 **Daily Mashwara (Wisdom)**: Practical life principles on Barakah, overcoming procrastination, and consistency.
-  - 📖 **Thoughts to Ponder**: Uplifting reflections and timeless insights.
-  - 🤲 **Dua & Zikr**: Ayat al-Kursi, Dua Yunus, Istighfar, Hasbunallah, Salawat.
-  - 🌬️ **Breathe & Move**: Guided 4-phase box breathing visualizer, physiological sigh, and movement resets.
-  - 📱 **Mindful Reels**: Visual sparks of motivation.
-- **Embedded Cinema Player**: Built-in YouTube player served over a local loopback HTTP origin (`127.0.0.1`) with automatic embed error detection and search fallbacks.
-- **Guided Box Breathing**: Interactive glowing orb guides 4s inhale, 4s hold, 4s exhale, 4s hold.
-- **Singing Bowl Break Timer**: Choose 3, 5, 7, 10, or 15 minutes; a soothing Tibetan singing bowl bell chimes when it's time to return.
-
-### 6. 🎨 Handcrafted Glassmorphism Themes
-- **Midnight Aurora**: Deep obsidian indigo with glowing cyan/purple aurora accents and frosted backdrop filters.
-- **Royal Emerald & Gold**: Luxurious deep forest emerald velvet paired with regal warm gold highlights.
-- **Obsidian OLED**: Absolute pitch-black contrast optimized for OLED displays and late-night sessions.
+```text
+Subah-TaskBook/
+├── main.js                     # Electron main process entry point
+├── preload.js                  # IPC security bridge and safe API exposure
+├── package.json                # Project dependencies and packaging scripts
+├── src/                        # Frontend UI components, styling & audio effects
+├── assets/                     # Application icons, celebration graphics & soundbites
+├── scripts/                    # Build and distribution utilities
+├── test/                       # Unit tests & rollover validation suite
+├── .gitignore                  # Node modules & build exclusions
+└── LICENSE                     # Open-source MIT License
+```
 
 ---
 
-## ⌨️ Shortcuts & Hotkeys
-
-| Shortcut | Scope | Action |
-| :--- | :--- | :--- |
-| **`Ctrl + Shift + T`** | Windows Global | Summon / Minimize Subah instantly from anywhere |
-| **`Enter`** | Task Input | Rapidly add new task card |
-| **`Ctrl + Enter`** | Brain Dump | Submit and parse journal dump |
-| **`Esc`** | Modal Dialogs | Dismiss preview / unboxing dialog |
-
----
-
-## 🛠️ Tech Stack & Architecture
-
-- **Shell**: Electron 34.2.0 (Windows x64).
-- **Frontend Architecture**: Pure Vanilla HTML5, CSS3 Glassmorphism tokens, and ES6 Modules.
-- **Dependencies**: **0 Runtime Dependencies** (Only Electron in `devDependencies`).
-- **Data Persistence**: Atomic, corruption-resistant JSON engine with rolling historical backups in `%APPDATA%\subah-taskbook\`.
-- **Loopback Origin**: Internal Node.js HTTP server on loopback interface (`127.0.0.1`) ensures smooth YouTube iframe embedding and prevents CORS issues.
-- **Testing**: Comprehensive 17-point test harness (`npm test`) validating streak calculations, task rollover series, UI contracts, and media endpoint durability.
-
----
-
-## 🚀 Installation & Developer Setup
+## ⚡ Quick Start
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) (v18 or higher recommended)
-- Windows 10 or Windows 11
+- Node.js 18.0+ or higher
+- npm / yarn
 
-### 1. Clone & Install
+### Installation
 ```bash
 git clone https://github.com/Kamran5H/Subah-TaskBook.git
 cd Subah-TaskBook
+
+# Install dependencies
 npm install
-```
 
-### 2. Run Test Suite
-```bash
-npm test
-```
-
-### 3. Launch Development Instance
-```bash
+# Launch Subah desktop app
 npm start
 ```
 
-### 4. Build Standalone Production Executable
-```bash
-npm run package
-```
-Generates the portable binary inside `dist/Subah-win32-x64/Subah.exe`.
-
 ---
 
-## 👤 Author & Credits
+## 📜 License
 
-- **Developer & Architect**: [Kamran Ashraf (@Kamran5H)](https://github.com/Kamran5H)
-- **Design Signature**: Golden developer attribution integrated into settings and footer.
-- **License**: Released under the [MIT License](LICENSE).
+This project is open-source and released under the [MIT License](LICENSE).  
+Copyright (c) 2024-2026 **Kamran Ashraf**.
