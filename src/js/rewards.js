@@ -320,6 +320,7 @@ class SubahRewards {
       }
       if (this.readingContainer) {
         this.readingContainer.style.display = "block";
+        this.readingContainer.classList.toggle("urdu-poetry-content", reward.category === "poetry-ur");
         if (reward.category === "breathing") {
           this.readingContainer.innerHTML = `
             <div class="breathing-guide-card">

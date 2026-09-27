@@ -243,6 +243,13 @@
   color: var(--text-primary);
 }
 
+.reading-content-card.urdu-poetry-content {
+  direction: rtl;
+  text-align: right;
+  font-family: "Noto Nastaliq Urdu", "Segoe UI", sans-serif;
+  line-height: 2;
+}
+
 /* Interactive Zen Breathing Visualizer */
 .breathing-guide-card {
   display: flex;

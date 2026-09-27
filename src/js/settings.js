@@ -245,6 +245,8 @@ class SubahSettings {
       melody: "🎵 Peaceful Melody",
       mashwara: "💡 Mashwara / Advice",
       reading: "📖 Thought to Ponder",
+      "poetry-en": "🖋️ English Poetry",
+      "poetry-ur": "🪶 اردو شاعری",
       dua: "🤲 Dua & Zikr",
       breathing: "🌬️ Breathe & Move",
       reel: "📱 Short Reel"
