@@ -11,25 +11,19 @@ if (-not (Test-Path $iconPath)) {
     Write-Warning "Icon not found at $iconPath"
 }
 
-# Determine target executable or launch script
-$distExe = Join-Path $projectRoot "dist\Subah-win32-x64\Subah.exe"
+# Always use the live launcher so a normal `git pull` is reflected after restart.
+# Packaged builds are intentionally opt-in and should not silently strand users on
+# an old copy of the application.
 $launchVbs = Join-Path $scriptDir "launch.vbs"
 
-$targetPath = ""
-$targetArgs = ""
-
-if (Test-Path $distExe) {
-    $targetPath = $distExe
-    $targetArgs = ""
-    Write-Host "Target: Packaged binary ($distExe)" -ForegroundColor Cyan
-} elseif (Test-Path $launchVbs) {
+$targetPath = "wscript.exe"
+$targetArgs = "`"$launchVbs`""
+if (Test-Path $launchVbs) {
     $targetPath = "wscript.exe"
     $targetArgs = "`"$launchVbs`""
     Write-Host "Target: Live launcher ($launchVbs)" -ForegroundColor Cyan
 } else {
-    $targetPath = "cmd.exe"
-    $targetArgs = "/c npx electron . `"$projectRoot`""
-    Write-Host "Target: Direct electron command" -ForegroundColor Cyan
+    throw "Live launcher not found at $launchVbs"
 }
 
 # Detect desktop paths (OneDrive Desktop + local user profile Desktop)
