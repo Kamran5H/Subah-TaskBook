@@ -28,16 +28,11 @@ End If
 
 WshShell.CurrentDirectory = rootDir
 
-distExe = rootDir & "\dist\Subah-win32-x64\Subah.exe"
 electronExe = rootDir & "\node_modules\electron\dist\electron.exe"
 
-If fso.FileExists(distExe) Then
-    ' Launch detached native binary
-    WshShell.Run "cmd /c start """" """ & distExe & """", 0, False
-ElseIf fso.FileExists(electronExe) Then
+If fso.FileExists(electronExe) Then
     ' Launch detached native Electron binary directly with project folder
     WshShell.Run "cmd /c start """" """ & electronExe & """ """ & rootDir & """", 0, False
 Else
     WshShell.Run "cmd /c start """" npx electron """ & rootDir & """", 0, False
 End If
-
