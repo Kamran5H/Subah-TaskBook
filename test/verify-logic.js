@@ -15,7 +15,7 @@ assert(DEFAULT_REWARDS.length >= 10, "Should have at least 10 curated rewards");
 
 console.log(`✓ Reward Library verified: ${DEFAULT_REWARDS.length} curated items loaded.`);
 
-const requiredCategories = ["naat", "qawwali", "melody", "mashwara", "reading", "reel", "dua", "breathing"];
+const requiredCategories = ["naat", "qawwali", "melody", "mashwara", "reading", "poetry-en", "poetry-ur", "reel", "dua", "breathing"];
 requiredCategories.forEach(cat => {
   const count = DEFAULT_REWARDS.filter(r => r.category === cat).length;
   assert(count > 0, `Category '${cat}' must have at least one reward`);

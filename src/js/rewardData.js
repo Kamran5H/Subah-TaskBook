@@ -624,6 +624,186 @@ const DEFAULT_REWARDS = [
     "content": "### 🚶 Motion Changes Emotion\nStuck thinking usually lives in a stuck body. A short walk floods the brain with fresh blood and often shakes an idea loose that sitting never could.\n\n**The practice:**\n1. Stand and walk slowly around the room or to a window and back, three times.\n2. Let the arms swing, roll the shoulders, unclench the jaw.\n3. Look far away as you move. Return to the desk and notice the problem has quietly rearranged itself.",
     "description": "A brief walking reset for when thinking gets stuck.",
     "searchUrl": "https://www.youtube.com/results?search_query=walking%20break%20movement%20focus%20reset"
+  },
+
+  // ── Poetry in English (original bilingual-safe offline readings) ───────────
+  {
+    "id": "poetry-en-01",
+    "category": "poetry-en",
+    "categoryLabel": "🖋️ English Poetry",
+    "title": "The Small Light",
+    "author": "Subah Original Collection",
+    "duration": "2 mins",
+    "content": "### The Small Light\n\nA small light is still a light\nwhen the whole road has gone dark.\n\nTake one honest step tonight;\nthe morning will remember its spark.\n\nDo not demand the distant sun\nbefore you tend the flame you own.\nA patient heart, a task begun,\ncan turn a room into a home.",
+    "description": "An original poem about beginning gently when the path feels uncertain.",
+    "searchUrl": "https://www.google.com/search?q=original+poetry+small+light+Subah"
+  },
+  {
+    "id": "poetry-en-02",
+    "category": "poetry-en",
+    "categoryLabel": "🖋️ English Poetry",
+    "title": "A Quiet Kind of Brave",
+    "author": "Subah Original Collection",
+    "duration": "2 mins",
+    "content": "### A Quiet Kind of Brave\n\nBravery is not always thunder,\nnot always banners in the air.\nSometimes it is choosing wonder\nwhile carrying a private care.\n\nIt is the cup you wash at midnight,\nthe call you make, the truth you say;\nthe soul that keeps a window moon-bright\nand makes a little room for day.",
+    "description": "A soft celebration of everyday courage.",
+    "searchUrl": "https://www.google.com/search?q=original+poetry+quiet+kind+of+brave+Subah"
+  },
+  {
+    "id": "poetry-en-03",
+    "category": "poetry-en",
+    "categoryLabel": "🖋️ English Poetry",
+    "title": "The Orchard of Hours",
+    "author": "Subah Original Collection",
+    "duration": "3 mins",
+    "content": "### The Orchard of Hours\n\nThe hours are trees in an orchard,\neach fruit a chance to receive.\nSome carry the gold of an answer,\nsome teach us the art to grieve.\n\nPick one with both hands and presence;\ndo not bruise tomorrow with haste.\nThe sweetest work grows slowly,\nand nothing sincere goes to waste.",
+    "description": "A meditation on time, attention, and meaningful work.",
+    "searchUrl": "https://www.google.com/search?q=original+poetry+orchard+of+hours+Subah"
+  },
+  {
+    "id": "poetry-en-04",
+    "category": "poetry-en",
+    "categoryLabel": "🖋️ English Poetry",
+    "title": "After the Rain",
+    "author": "Subah Original Collection",
+    "duration": "2 mins",
+    "content": "### After the Rain\n\nThe roof remembers every drop,\nthe street reflects a rinsed blue sky.\nWhat felt like an endless stop\nhas made the dust and roses sigh.\n\nBegin again without apology;\nthe earth does not explain its green.\nA heart may keep its history\nand still become a brighter scene.",
+    "description": "An original reset poem for returning after a difficult day.",
+    "searchUrl": "https://www.google.com/search?q=original+poetry+after+the+rain+Subah"
+  },
+  {
+    "id": "poetry-en-05",
+    "category": "poetry-en",
+    "categoryLabel": "🖋️ English Poetry",
+    "title": "The Work Before Applause",
+    "author": "Subah Original Collection",
+    "duration": "3 mins",
+    "content": "### The Work Before Applause\n\nBefore the room becomes a choir,\nbefore the road begins to know,\nthere is the hand that lights the fire\nand tends the roots below.\n\nLet praise arrive on its own weather;\nlet purpose be the song you keep.\nThe quiet hours joined together\nare promises the world will reap.",
+    "description": "A reminder to honor process before recognition.",
+    "searchUrl": "https://www.google.com/search?q=original+poetry+work+before+applause+Subah"
+  },
+  {
+    "id": "poetry-en-06",
+    "category": "poetry-en",
+    "categoryLabel": "🖋️ English Poetry",
+    "title": "Map of the Heart",
+    "author": "Subah Original Collection",
+    "duration": "2 mins",
+    "content": "### Map of the Heart\n\nDraw no straight line through a life;\nthere are valleys, tides, and skies.\nThe place you call a loss today\nmay be where a new road lies.\n\nCarry compassion as your compass,\nlet patience mark the unknown part.\nThe longest journey homeward\nbegins by listening to the heart.",
+    "description": "A gentle poem for seasons of change and uncertainty.",
+    "searchUrl": "https://www.google.com/search?q=original+poetry+map+of+the+heart+Subah"
+  },
+  {
+    "id": "poetry-en-07",
+    "category": "poetry-en",
+    "categoryLabel": "🖋️ English Poetry",
+    "title": "The Blue Hour Promise",
+    "author": "Subah Original Collection",
+    "duration": "2 mins",
+    "content": "### The Blue Hour Promise\n\nAt the blue hour, between the known\nand all the dark has yet to be,\nmake one small promise to your soul:\nI will return to what is free.\n\nFree from hurry, free from proving,\nfree to learn the shape of grace;\nthe dawn is not a distant country,\nit is a kindness in this place.",
+    "description": "An original evening reflection about returning to peace.",
+    "searchUrl": "https://www.google.com/search?q=original+poetry+blue+hour+promise+Subah"
+  },
+  {
+    "id": "poetry-en-08",
+    "category": "poetry-en",
+    "categoryLabel": "🖋️ English Poetry",
+    "title": "What the Seed Knows",
+    "author": "Subah Original Collection",
+    "duration": "2 mins",
+    "content": "### What the Seed Knows\n\nA seed does not mistake the darkness\nfor the ending of the spring.\nIt gathers all its hidden courage\nbefore it dares to sing.\n\nSo let the unseen work be sacred,\nlet your roots grow deep and slow.\nThe life you cannot yet see clearly\nmay be the truest thing you grow.",
+    "description": "A hopeful poem about invisible progress.",
+    "searchUrl": "https://www.google.com/search?q=original+poetry+what+the+seed+knows+Subah"
+  },
+
+  // ── Poetry in Urdu (original Urdu poems with English descriptions) ─────────
+  {
+    "id": "poetry-ur-01",
+    "category": "poetry-ur",
+    "categoryLabel": "🪶 اردو شاعری",
+    "title": "صبح کا وعدہ",
+    "author": "سبح اصل مجموعہ",
+    "duration": "2 mins",
+    "content": "### صبح کا وعدہ\n\nرات کی چادر میں چھپا ہے،\nایک روشن سا خیال۔\nدل اگر ہمت سے دھڑکے،\nدور ہو ہر ملال۔\n\nایک قدم سچ کی طرف ہو،\nراستہ خود کھل پڑے۔\nصبح آتی ہے ہمیشہ،\nجب چراغ اپنا جلے۔",
+    "description": "A short original Urdu poem about hope, courage, and a new morning.",
+    "searchUrl": "https://www.google.com/search?q=%D8%B5%D8%A8%D8%AD+%DA%A9%D8%A7+%D9%88%D8%B9%D8%AF%DB%81+%D8%A7%D8%B1%D8%AF%D9%88+%D8%B4%D8%A7%D8%B9%D8%B1%DB%8C"
+  },
+  {
+    "id": "poetry-ur-02",
+    "category": "poetry-ur",
+    "categoryLabel": "🪶 اردو شاعری",
+    "title": "خاموش سفر",
+    "author": "سبح اصل مجموعہ",
+    "duration": "2 mins",
+    "content": "### خاموش سفر\n\nخامشی میں بھی صدا ہے،\nدل کو سننا سیکھ لے۔\nدور منزل ہو اگر تو،\nپاؤں چلنا سیکھ لے۔\n\nریت پر لکھے ارادے،\nپانیوں سے ڈر نہیں۔\nجو سفر نیت سے ہو،\nاس کو تھکنا در نہیں۔",
+    "description": "An original Urdu poem about quiet perseverance.",
+    "searchUrl": "https://www.google.com/search?q=%D8%AE%D8%A7%D9%85%D9%88%D8%B4+%D8%B3%D9%81%D8%B1+%D8%A7%D8%B1%D8%AF%D9%88+%D8%B4%D8%A7%D8%B9%D8%B1%DB%8C"
+  },
+  {
+    "id": "poetry-ur-03",
+    "category": "poetry-ur",
+    "categoryLabel": "🪶 اردو شاعری",
+    "title": "دل کا چراغ",
+    "author": "سبح اصل مجموعہ",
+    "duration": "2 mins",
+    "content": "### دل کا چراغ\n\nدل میں اک چھوٹا چراغ،\nآندھیوں سے کہہ رہا۔\nمیں اگر روشن رہوں تو،\nرات سے کیا ڈر رہا۔\n\nنیتوں کی خوشبوؤں سے،\nراستے مہکیں گے پھر۔\nایک نیکی روز کر کے،\nدیکھ دل بدلے گا پھر۔",
+    "description": "An original Urdu poem about keeping kindness alive through difficulty.",
+    "searchUrl": "https://www.google.com/search?q=%D8%AF%D9%84+%DA%A9%D8%A7+%DA%86%D8%B1%D8%A7%D8%BA+%D8%A7%D8%B1%D8%AF%D9%88+%D8%B4%D8%A7%D8%B9%D8%B1%DB%8C"
+  },
+  {
+    "id": "poetry-ur-04",
+    "category": "poetry-ur",
+    "categoryLabel": "🪶 اردو شاعری",
+    "title": "بارش کے بعد",
+    "author": "سبح اصل مجموعہ",
+    "duration": "2 mins",
+    "content": "### بارش کے بعد\n\nدھوپ نے پھر رنگ بھرے ہیں،\nباغ کی ہر شاخ پر۔\nاشک دھل کر موتی بنے،\nزندگی کی خاک پر۔\n\nکل کی ٹھوکر یاد رکھنا،\nپر ٹھہرنا مت کہیں۔\nبادلوں کے پار دیکھو،\nآسمان کم ہے کہیں؟",
+    "description": "An original Urdu poem about renewal after hardship.",
+    "searchUrl": "https://www.google.com/search?q=%D8%A8%D8%A7%D8%B1%D8%B4+%DA%A9%DB%92+%D8%A8%D8%B9%D8%AF+%D8%A7%D8%B1%D8%AF%D9%88+%D8%B4%D8%A7%D8%B9%D8%B1%DB%8C"
+  },
+  {
+    "id": "poetry-ur-05",
+    "category": "poetry-ur",
+    "categoryLabel": "🪶 اردو شاعری",
+    "title": "آہستہ آہستہ",
+    "author": "سبح اصل مجموعہ",
+    "duration": "2 mins",
+    "content": "### آہستہ آہستہ\n\nقطرہ قطرہ دریا بنتا،\nپل پل بنتا سال۔\nجلدی میں جو ہاتھ سے چھوٹے،\nصبر سنبھالے حال۔\n\nآج فقط اک کام سنوارو،\nکل کی فکر نہ کر۔\nراہ تمہاری ساتھ چلے گی،\nدل کو نرم سفر۔",
+    "description": "An original Urdu poem celebrating patient, consistent progress.",
+    "searchUrl": "https://www.google.com/search?q=%D8%A2%DB%81%D8%B3%D8%AA%DB%81+%D8%A2%DB%81%D8%B3%D8%AA%DB%81+%D8%A7%D8%B1%D8%AF%D9%88+%D8%B4%D8%A7%D8%B9%D8%B1%DB%8C"
+  },
+  {
+    "id": "poetry-ur-06",
+    "category": "poetry-ur",
+    "categoryLabel": "🪶 اردو شاعری",
+    "title": "ماں کی دعا",
+    "author": "سبح اصل مجموعہ",
+    "duration": "2 mins",
+    "content": "### ماں کی دعا\n\nگھر سے نکلا، ساتھ چلی تھی،\nاک خوشبو سی دعا۔\nدھوپ ملی تو سایہ بن کر،\nدل کے پاس رہی صدا۔\n\nدور سفر میں یاد نے میری،\nپاؤں تھام لیے۔\nمحبت نے ٹوٹے لمحوں کو،\nپھر سے نام دیے۔",
+    "description": "An original Urdu tribute to the quiet shelter of a mother's prayer.",
+    "searchUrl": "https://www.google.com/search?q=%D9%85%D8%A7%DA%BA+%DA%A9%DB%8C+%D8%AF%D8%B9%D8%A7+%D8%A7%D8%B1%D8%AF%D9%88+%D8%B4%D8%A7%D8%B9%D8%B1%DB%8C"
+  },
+  {
+    "id": "poetry-ur-07",
+    "category": "poetry-ur",
+    "categoryLabel": "🪶 اردو شاعری",
+    "title": "کتاب اور دل",
+    "author": "سبح اصل مجموعہ",
+    "duration": "3 mins",
+    "content": "### کتاب اور دل\n\nایک ورق نے ہاتھ پکڑا،\nایک خیال نے دل۔\nلفظوں کے اس نرم سفر نے،\nدور کیا ہر پل۔\n\nجو بھی پڑھو، روشنی بانٹو،\nعلم امانت ہے۔\nدل کو کھولو، دنیا دیکھو،\nہر انسان حکایت ہے۔",
+    "description": "An original Urdu poem about reading as a bridge between hearts.",
+    "searchUrl": "https://www.google.com/search?q=%DA%A9%D8%AA%D8%A7%D8%A8+%D8%A7%D9%88%D8%B1+%D8%AF%D9%84+%D8%A7%D8%B1%D8%AF%D9%88+%D8%B4%D8%A7%D8%B9%D8%B1%DB%8C"
+  },
+  {
+    "id": "poetry-ur-08",
+    "category": "poetry-ur",
+    "categoryLabel": "🪶 اردو شاعری",
+    "title": "آسمان ابھی باقی ہے",
+    "author": "سبح اصل مجموعہ",
+    "duration": "2 mins",
+    "content": "### آسمان ابھی باقی ہے\n\nایک شکست سے سفر کا،\nاختتام ہوتا نہیں۔\nدل میں جب تک سانس باقی،\nخواب کم ہوتا نہیں۔\n\nگر پڑو تو خاک چومو،\nپھر اٹھو، پھر چل پڑو۔\nجس طرف امید لے جائے،\nاس طرف ہی دل کرو۔",
+    "description": "An original Urdu poem for recovering confidence after a setback.",
+    "searchUrl": "https://www.google.com/search?q=%D8%A2%D8%B3%D9%85%D8%A7%D9%86+%D8%A7%D8%A8%DA%BE%DB%8C+%D8%A8%D8%A7%D9%82%DB%8C+%DB%81%DB%92+%D8%A7%D8%B1%D8%AF%D9%88"
   }
 ];
 

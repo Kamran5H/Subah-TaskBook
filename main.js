@@ -118,6 +118,13 @@ function loadAppData() {
 
   if (parsed) {
     const defaults = getDefaultState();
+    const savedCategories = parsed.settings && Array.isArray(parsed.settings.enabledCategories)
+      ? parsed.settings.enabledCategories
+      : [];
+    const enabledCategories = [...new Set([
+      ...defaults.settings.enabledCategories,
+      ...savedCategories
+    ])];
     const streak = typeof parsed.streak === "number" ? parsed.streak : 1;
     const maxStreak = typeof parsed.maxStreak === "number" ? Math.max(parsed.maxStreak, streak) : streak;
     return {
@@ -125,7 +132,11 @@ function loadAppData() {
       ...parsed,
       streak,
       maxStreak,
-      settings: { ...defaults.settings, ...(parsed.settings || {}) },
+      settings: {
+        ...defaults.settings,
+        ...(parsed.settings || {}),
+        enabledCategories
+      },
       tasksByDate: parsed.tasksByDate || {},
       reflectionsByDate: parsed.reflectionsByDate || {},
       customRewards: parsed.customRewards || []
