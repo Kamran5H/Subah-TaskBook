@@ -689,15 +689,21 @@ ipcMain.handle("get-app-state", async () => {
 });
 
 // Commit tasks (supports any count: 1, 2, 5, etc.)
-ipcMain.handle("commit-morning-tasks", async (event, { tasks }) => {
+ipcMain.handle("commit-morning-tasks", async (event, payload) => {
+  const tasks = payload && payload.tasks;
   if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
     return { success: false, error: "Please add at least 1 task" };
+  }
+
+  const validTasks = tasks.filter(t => t && typeof t === "object" && typeof t.text === "string" && t.text.trim());
+  if (validTasks.length === 0) {
+    return { success: false, error: "Please add at least 1 non-empty task" };
   }
 
   const data = loadAppData();
   const today = getTodayDateString();
 
-  const formattedTasks = tasks.map((t, idx) => ({
+  const formattedTasks = validTasks.map((t, idx) => ({
     id: t.id || `task-${Date.now()}-${idx}`,
     text: t.text.trim(),
     completed: false,
@@ -725,9 +731,18 @@ ipcMain.handle("commit-morning-tasks", async (event, { tasks }) => {
 });
 
 // Update tasks during the day (toggle, add, delete, inline edit)
-ipcMain.handle("update-tasks", async (event, { date, tasks }) => {
+ipcMain.handle("update-tasks", async (event, payload) => {
+  const date = payload && payload.date;
+  const tasks = payload && payload.tasks;
+  if (!Array.isArray(tasks)) {
+    return { success: false, error: "Tasks must be an array" };
+  }
+
   const data = loadAppData();
   const targetDate = date || getTodayDateString();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
+    return { success: false, error: "Invalid task date" };
+  }
   data.tasksByDate[targetDate] = tasks;
 
   // Count today as committed the first time it actually has tasks.
@@ -745,6 +760,10 @@ ipcMain.handle("update-tasks", async (event, { date, tasks }) => {
 
 // Save settings (theme, startup, timer, etc.)
 ipcMain.handle("save-settings", async (event, newSettings) => {
+  if (!newSettings || typeof newSettings !== "object" || Array.isArray(newSettings)) {
+    return { success: false, error: "Settings must be an object" };
+  }
+
   const data = loadAppData();
   data.settings = { ...data.settings, ...newSettings };
   saveAppData(data);
@@ -759,6 +778,10 @@ ipcMain.handle("save-settings", async (event, newSettings) => {
 
 // Save custom rewards list
 ipcMain.handle("save-custom-rewards", async (event, customRewards) => {
+  if (!Array.isArray(customRewards)) {
+    return { success: false, error: "Custom rewards must be an array" };
+  }
+
   const data = loadAppData();
   data.customRewards = customRewards;
   saveAppData(data);
@@ -858,7 +881,13 @@ ipcMain.handle("import-backup", async (event, jsonString) => {
 });
 
 // Save daily reflection note
-ipcMain.handle("save-reflection", async (event, { date, text }) => {
+ipcMain.handle("save-reflection", async (event, payload) => {
+  const date = payload && payload.date;
+  const text = payload && payload.text;
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return { success: false, error: "Invalid reflection date" };
+  }
+
   const data = loadAppData();
   if (!data.reflectionsByDate) data.reflectionsByDate = {};
   data.reflectionsByDate[date] = text || "";
@@ -1043,5 +1072,3 @@ ipcMain.handle("apply-update-and-restart", async (event, filePath) => {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { rollOverPendingTasks, applyDailyStreak, compareVersions };
 }
-
-

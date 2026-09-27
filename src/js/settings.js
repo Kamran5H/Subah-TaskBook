@@ -4,11 +4,19 @@ class SubahSettings {
   constructor() {
     this.settings = {};
     this.customRewards = [];
+    this.listenersBound = false;
   }
 
   init(settings, customRewards) {
     this.settings = settings || {};
     this.customRewards = customRewards || [];
+
+    if (this.listenersBound) {
+      this.syncControls();
+      this.renderCustomRewards();
+      return;
+    }
+    this.listenersBound = true;
 
     // Theme selector buttons
     document.querySelectorAll(".theme-card-btn").forEach(card => {
@@ -127,6 +135,21 @@ class SubahSettings {
 
     // Initial render of custom rewards list
     this.renderCustomRewards();
+  }
+
+  syncControls() {
+    const startupToggle = document.getElementById("toggle-startup-login");
+    if (startupToggle) startupToggle.checked = !!this.settings.openAtLogin;
+
+    const soundToggle = document.getElementById("toggle-sound-effects");
+    if (soundToggle) soundToggle.checked = this.settings.soundEnabled !== false;
+
+    const autoUpdateToggle = document.getElementById("toggle-auto-updates");
+    if (autoUpdateToggle) autoUpdateToggle.checked = this.settings.autoCheckUpdates !== false;
+
+    document.querySelectorAll(".theme-card-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.getAttribute("data-theme") === this.settings.theme);
+    });
   }
 
   async handleExportBackup() {
