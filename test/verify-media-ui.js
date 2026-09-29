@@ -43,8 +43,12 @@ console.log("✓ All " + DEFAULT_REWARDS.length + " rewards carry a durable sear
 // 12. Golden developer signature: present, gold, and click-inert.
 const indexHtml = fs.readFileSync(path.join(ROOT, "src", "index.html"), "utf-8");
 const mainCss = fs.readFileSync(path.join(ROOT, "src", "styles", "main.css"), "utf-8");
-assert(indexHtml.includes("Kamran Ashraf"), "developer credit must appear in the UI");
-assert(/signature-gold-text/.test(indexHtml), "credit must use the gold gradient treatment");
+const signatureMarkup = indexHtml.match(/<footer class="dev-signature-line"[^>]*>([\s\S]*?)<\/footer>/);
+assert(signatureMarkup, "developer credit must appear in the shared app shell footer");
+assert(signatureMarkup[0].includes("Developer:") && signatureMarkup[0].includes("Kamran Ashraf"));
+assert(/signature-gold-text/.test(signatureMarkup[0]), "credit must use the gold gradient treatment");
+assert(indexHtml.indexOf(signatureMarkup[0]) > indexHtml.indexOf("</main>"), "shared attribution must be outside all tab panels");
+assert.strictEqual((indexHtml.match(/Kamran Ashraf/g) || []).length, 1, "developer attribution must appear only once in the UI");
 assert(
   /\.signature-gold-text\s*\{[^}]*linear-gradient/.test(mainCss),
   "gold gradient must be defined for .signature-gold-text"

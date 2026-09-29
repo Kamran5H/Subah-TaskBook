@@ -499,12 +499,18 @@ button, a, .window-btn, .nav-tab-btn, .filter-pill-btn, .theme-card-btn, .switch
 
 /* --- Slim daily signature (Checklist tab footer) --- */
 .dev-signature-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  min-height: 34px;
   flex-shrink: 0;
-  margin-top: 4px;
-  padding: 9px 0 2px;
+  padding: 5px 12px;
   text-align: center;
   pointer-events: none;
-  border-top: 1px solid rgba(246, 214, 122, 0.14);
+  background: var(--surface-header, rgba(8, 12, 22, 0.75));
+  border-top: 1px solid rgba(246, 214, 122, 0.22);
 }
 
 .dev-signature-line .dev-sig-inline-label {
@@ -512,8 +518,7 @@ button, a, .window-btn, .nav-tab-btn, .filter-pill-btn, .theme-card-btn, .switch
   font-weight: 600;
   letter-spacing: 1.7px;
   text-transform: uppercase;
-  color: var(--text-muted);
-  margin-right: 7px;
+  color: rgba(246, 214, 122, 0.8);
   vertical-align: middle;
 }
 
@@ -524,6 +529,22 @@ button, a, .window-btn, .nav-tab-btn, .filter-pill-btn, .theme-card-btn, .switch
   letter-spacing: 0.5px;
   vertical-align: middle;
   filter: drop-shadow(0 1px 6px rgba(246, 214, 122, 0.26));
+}
+
+@media (max-width: 520px) {
+  .dev-signature-line {
+    min-height: 30px;
+    padding: 4px 8px;
+  }
+
+  .dev-signature-line .dev-sig-inline-label {
+    font-size: 9px;
+    letter-spacing: 1.2px;
+  }
+
+  .dev-signature-line .dev-sig-inline-name {
+    font-size: 12px;
+  }
 }
 
 /* --- Embed fallback card (shown when a video cannot play inline) --- */
