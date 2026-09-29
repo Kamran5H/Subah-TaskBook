@@ -10,7 +10,7 @@ console.log("   RUNNING SUBAH LIVE SHARE & UPDATER TESTS       ");
 console.log("==================================================\n");
 
 // 1. Test Semantic Version Comparison Logic
-const { compareVersions } = require(path.join(ROOT, "main.js"));
+const { compareVersions, saveDataOrFailure } = require(path.join(ROOT, "main.js"));
 assert.strictEqual(typeof compareVersions, "function", "main.js must export compareVersions");
 
 assert.strictEqual(compareVersions("1.0.0", "1.0.0"), 0, "Same version must return 0");
@@ -22,6 +22,20 @@ assert.strictEqual(compareVersions("1.0.0", "1.0.1"), -1, "1.0.0 < 1.0.1");
 assert.strictEqual(compareVersions("1.0.0", "2.0.0"), -1, "1.0.0 < 2.0.0");
 assert.strictEqual(compareVersions("1.0.0-beta", "1.0.0"), 0, "Tolerant of suffixes");
 console.log("✓ Semantic version comparison accurately identifies new, older, and identical releases.");
+
+// Persistence failures must remain failures in the IPC response contract.
+const writeFailure = saveDataOrFailure(
+  { tasksByDate: {} },
+  "Unable to save task changes.",
+  () => false
+);
+assert.deepStrictEqual(writeFailure, { success: false, error: "Unable to save task changes." });
+assert.strictEqual(
+  saveDataOrFailure({}, "Unable to save task changes.", () => true),
+  null,
+  "Successful persistence must not produce a failure response"
+);
+console.log("✓ Persistence response helper reports failed writes without masking successful writes.");
 
 // 2. Test Room Code Generation & Peer Formatting
 function generateRoomCode() {
@@ -83,6 +97,42 @@ assert(/onUpdateProgress:\s*\(/.test(preloadSrc), "preload.js must expose onUpda
 assert(/getAppVersion:\s*\(\)\s*=>/.test(preloadSrc), "preload.js must expose getAppVersion");
 console.log("✓ Preload bridge exposes complete set of Updater APIs to the renderer.");
 
+// A failed representative mutation must reach the renderer's error callback.
+let exposedApi;
+const preloadContext = {
+  require: () => ({
+    contextBridge: {
+      exposeInMainWorld: (name, api) => {
+        assert.strictEqual(name, "subahAPI");
+        exposedApi = api;
+      }
+    },
+    ipcRenderer: {
+      invoke: async (channel) => {
+        assert(["update-tasks", "import-backup"].includes(channel), `Unexpected mutation channel: ${channel}`);
+        return { success: false, error: "Unable to save task changes." };
+      },
+      send: () => {},
+      on: () => {}
+    }
+  })
+};
+vm.runInNewContext(preloadSrc, preloadContext);
+
+(async () => {
+  const surfacedErrors = [];
+  exposedApi.onOperationError((message) => { surfacedErrors.push(message); });
+  const failedUpdate = await exposedApi.updateTasks({ date: "2026-09-30", tasks: [] });
+  assert.strictEqual(failedUpdate.success, false);
+  const failedImport = await exposedApi.importBackup("{}");
+  assert.strictEqual(failedImport.success, false);
+  assert.deepStrictEqual(surfacedErrors, [
+    "Unable to save task changes.",
+    "Unable to save task changes."
+  ]);
+  console.log("✓ Failed update and backup-import responses reach the renderer error callback.");
+})();
+
 // 5. Test Main Process IPC Handlers
 const mainSrc = fs.readFileSync(path.join(ROOT, "main.js"), "utf-8");
 assert(/ipcMain\.handle\("check-for-updates"/.test(mainSrc), "main.js must handle check-for-updates");
@@ -131,8 +181,12 @@ assert(updaterCss.includes("var(--text-primary"), "updater.css must use theme va
 console.log("✓ CSS styling verified for seamless multi-theme adaptation across all 3 visual themes.");
 
 // 10. Verify Developer Signature remains preserved & click-inert
-assert(indexHtml.includes("Kamran Ashraf"), "developer credit must remain present in index.html");
-assert(indexHtml.includes("signature-gold-text"), "developer credit must retain gold signature class");
+const signatureMarkup = indexHtml.match(/<footer class="dev-signature-line"[^>]*>([\s\S]*?)<\/footer>/);
+assert(signatureMarkup, "developer credit must appear in the shared app shell footer");
+assert(signatureMarkup[0].includes("Developer:") && signatureMarkup[0].includes("Kamran Ashraf"));
+assert(signatureMarkup[0].includes("signature-gold-text"), "developer credit must retain gold signature class");
+assert(indexHtml.indexOf(signatureMarkup[0]) > indexHtml.indexOf("</main>"), "shared attribution must be outside all tab panels");
+assert.strictEqual((indexHtml.match(/Kamran Ashraf/g) || []).length, 1, "developer attribution must appear only once in the UI");
 console.log("✓ Golden developer credit ('Kamran Ashraf') preserved without regression.");
 
 // 11. Test Icon Infrastructure & Web/System Integrations

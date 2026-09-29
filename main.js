@@ -179,6 +179,10 @@ function saveAppData(data) {
   }
 }
 
+function saveDataOrFailure(data, errorMessage, save = saveAppData) {
+  return save(data) ? null : { success: false, error: errorMessage };
+}
+
 function getAppIcon() {
   if (!nativeImage || !nativeImage.createFromPath) return undefined;
   const icoPath = path.join(__dirname, "assets", "icon.ico");
@@ -728,7 +732,11 @@ ipcMain.handle("commit-morning-tasks", async (event, payload) => {
 
   data.tasksByDate[today] = formattedTasks;
   data.lastCommittedDate = today;
-  saveAppData(data);
+  const failure = saveDataOrFailure(
+    data,
+    "Unable to save today's task plan. Check that the app data folder is writable and disk space is available."
+  );
+  if (failure) return failure;
   updateTrayMenu();
 
   return {
@@ -764,7 +772,11 @@ ipcMain.handle("update-tasks", async (event, payload) => {
     applyDailyStreak(data, today);
   }
 
-  saveAppData(data);
+  const failure = saveDataOrFailure(
+    data,
+    "Unable to save task changes. Check that the app data folder is writable and disk space is available."
+  );
+  if (failure) return failure;
   updateTrayMenu();
   return { success: true, tasks: data.tasksByDate[targetDate], streak: data.streak };
 });
@@ -777,7 +789,11 @@ ipcMain.handle("save-settings", async (event, newSettings) => {
 
   const data = loadAppData();
   data.settings = { ...data.settings, ...newSettings };
-  saveAppData(data);
+  const failure = saveDataOrFailure(
+    data,
+    "Unable to save settings. Check that the app data folder is writable and disk space is available."
+  );
+  if (failure) return failure;
 
   // Update OS startup setting
   if (typeof newSettings.openAtLogin === "boolean") {
@@ -795,7 +811,11 @@ ipcMain.handle("save-custom-rewards", async (event, customRewards) => {
 
   const data = loadAppData();
   data.customRewards = customRewards;
-  saveAppData(data);
+  const failure = saveDataOrFailure(
+    data,
+    "Unable to save custom rewards. Check that the app data folder is writable and disk space is available."
+  );
+  if (failure) return failure;
   return { success: true, customRewards: data.customRewards };
 });
 
@@ -883,7 +903,11 @@ ipcMain.handle("import-backup", async (event, jsonString) => {
       lastCommittedDate: parsed.lastCommittedDate || null
     };
 
-    saveAppData(merged);
+    const failure = saveDataOrFailure(
+      merged,
+      "Unable to import backup because the app data folder is not writable or disk space is unavailable."
+    );
+    if (failure) return failure;
     updateTrayMenu();
     return { success: true, data: merged };
   } catch (err) {
@@ -902,7 +926,11 @@ ipcMain.handle("save-reflection", async (event, payload) => {
   const data = loadAppData();
   if (!data.reflectionsByDate) data.reflectionsByDate = {};
   data.reflectionsByDate[date] = text || "";
-  saveAppData(data);
+  const failure = saveDataOrFailure(
+    data,
+    "Unable to save reflection. Check that the app data folder is writable and disk space is available."
+  );
+  if (failure) return failure;
   return { success: true, reflectionsByDate: data.reflectionsByDate };
 });
 
@@ -1081,5 +1109,5 @@ ipcMain.handle("apply-update-and-restart", async (event, filePath) => {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { rollOverPendingTasks, applyDailyStreak, compareVersions };
+  module.exports = { rollOverPendingTasks, applyDailyStreak, compareVersions, saveDataOrFailure };
 }

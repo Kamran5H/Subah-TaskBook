@@ -1,14 +1,27 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
+let onOperationError = () => {};
+
+const invokeMutation = async (channel, ...args) => {
+  const result = await ipcRenderer.invoke(channel, ...args);
+  if (result && result.success === false) {
+    onOperationError(result.error || "The change could not be saved.");
+  }
+  return result;
+};
+
 contextBridge.exposeInMainWorld("subahAPI", {
   getAppState: () => ipcRenderer.invoke("get-app-state"),
-  commitMorningTasks: (payload) => ipcRenderer.invoke("commit-morning-tasks", payload),
-  updateTasks: (payload) => ipcRenderer.invoke("update-tasks", payload),
-  saveSettings: (settings) => ipcRenderer.invoke("save-settings", settings),
-  saveCustomRewards: (rewards) => ipcRenderer.invoke("save-custom-rewards", rewards),
+  commitMorningTasks: (payload) => invokeMutation("commit-morning-tasks", payload),
+  updateTasks: (payload) => invokeMutation("update-tasks", payload),
+  saveSettings: (settings) => invokeMutation("save-settings", settings),
+  saveCustomRewards: (rewards) => invokeMutation("save-custom-rewards", rewards),
   exportBackup: () => ipcRenderer.invoke("export-backup"),
-  importBackup: (jsonStr) => ipcRenderer.invoke("import-backup", jsonStr),
-  saveReflection: (payload) => ipcRenderer.invoke("save-reflection", payload),
+  importBackup: (jsonStr) => invokeMutation("import-backup", jsonStr),
+  saveReflection: (payload) => invokeMutation("save-reflection", payload),
+  onOperationError: (callback) => {
+    onOperationError = typeof callback === "function" ? callback : () => {};
+  },
 
   // Window Controls
   windowMinimize: () => ipcRenderer.send("window-minimize"),

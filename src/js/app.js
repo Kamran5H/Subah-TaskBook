@@ -14,6 +14,9 @@ class SubahApp {
 
   async init() {
     this.toastContainer = document.getElementById("toast-container");
+    if (window.subahAPI && typeof window.subahAPI.onOperationError === "function") {
+      window.subahAPI.onOperationError((message) => this.showToast(message, "error", 5000));
+    }
 
     // Titlebar Window Controls
     const btnMin = document.getElementById("btn-win-min");
