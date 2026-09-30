@@ -84,7 +84,19 @@ function createRollingSnapshot(data) {
   }
 }
 
+// In-memory copy of subah-data.json. Every IPC call, tray refresh and window
+// move used to re-read and re-parse the whole file from disk, which got slower
+// as history grew. The file is only ever written by this process, so after the
+// first load the cache is authoritative and saveAppData keeps it in sync.
+let appDataCache = null;
+
 function loadAppData() {
+  if (appDataCache) return appDataCache;
+  appDataCache = readAppDataFromDisk();
+  return appDataCache;
+}
+
+function readAppDataFromDisk() {
   const filePath = getDataFilePath();
   const backupPath = filePath + ".bak";
 
@@ -166,11 +178,13 @@ function saveAppData(data) {
       } catch (_) {}
     }
     fs.renameSync(tempPath, filePath);
+    appDataCache = data;
     return true;
   } catch (err) {
     console.error("Error saving subah-data.json atomically:", err);
     try {
       fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+      appDataCache = data;
       return true;
     } catch (e2) {
       console.error("Fallback direct save failed:", e2);
@@ -271,6 +285,135 @@ function startRendererServer() {
   });
 }
 
+// --- Zoom -------------------------------------------------------------------
+// Browser-style preset steps so repeated Ctrl+/- lands on familiar values.
+const ZOOM_STEPS = [0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2];
+const ZOOM_MIN = ZOOM_STEPS[0];
+const ZOOM_MAX = ZOOM_STEPS[ZOOM_STEPS.length - 1];
+let zoomSaveTimer = null;
+
+function clampZoom(factor) {
+  const f = Number(factor);
+  if (!Number.isFinite(f) || f <= 0) return 1;
+  return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(f * 100) / 100));
+}
+
+function getSavedZoomFactor(data) {
+  return clampZoom(data && data.settings && data.settings.zoomFactor);
+}
+
+// Next preset above/below `current`; works even if current sits between presets.
+function nextZoomStep(current, direction) {
+  const cur = clampZoom(current);
+  if (direction > 0) {
+    const up = ZOOM_STEPS.find(s => s > cur + 0.001);
+    return up === undefined ? ZOOM_MAX : up;
+  }
+  const down = [...ZOOM_STEPS].reverse().find(s => s < cur - 0.001);
+  return down === undefined ? ZOOM_MIN : down;
+}
+
+// Maps a before-input-event keystroke (Ctrl held) to a zoom action.
+function getZoomShortcutAction(input) {
+  const key = input.key;
+  const code = input.code || "";
+  if (key === "=" || key === "+" || code === "NumpadAdd") return "in";
+  if (key === "-" || key === "_" || code === "NumpadSubtract") return "out";
+  if (key === "0" || code === "Numpad0" || code === "Digit0") return "reset";
+  return null;
+}
+
+function applyZoom(factor, { persist = true, announce = true } = {}) {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  const f = clampZoom(factor);
+  mainWindow.webContents.setZoomFactor(f);
+  mainWindow.webContents.send("zoom-changed", { factor: f, percent: Math.round(f * 100), announce });
+  if (!persist) return;
+  clearTimeout(zoomSaveTimer);
+  zoomSaveTimer = setTimeout(() => {
+    const data = loadAppData();
+    data.settings = data.settings || {};
+    if (data.settings.zoomFactor === f) return;
+    data.settings.zoomFactor = f;
+    saveAppData(data);
+  }, 400);
+}
+
+function stepZoom(direction) {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  applyZoom(nextZoomStep(mainWindow.webContents.getZoomFactor(), direction));
+}
+
+// --- Drag the window from any empty area -------------------------------------
+// The titlebar is a native drag region (smooth, supports Aero Snap). Empty
+// content areas can't be native drag regions without breaking clicks inside
+// them, so the renderer asks us to follow the OS cursor instead. Polling the
+// cursor here (not renderer mousemove -> IPC per event) keeps the window glued
+// to the pointer even when it outruns the window edge.
+let windowDrag = null;
+// On fractional display scaling (e.g. 160%) Windows rounds DIP<->pixel sizes,
+// so a window asked to be 1020 wide may report 1022. Re-reading that rounded
+// size at every drag would grow the window a couple of pixels per drag.
+// Remember what we asked for and reuse it while the window is unchanged.
+let dragSizeMemo = null;
+
+function startWindowDrag() {
+  if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isFullScreen()) return;
+  stopWindowDrag();
+  const cursor = screen.getCursorScreenPoint();
+  let bounds = mainWindow.getBounds();
+  let offsetX = cursor.x - bounds.x;
+  let offsetY = cursor.y - bounds.y;
+
+  if (mainWindow.isMaximized()) {
+    // Like dragging a maximised window's caption: restore and keep the cursor
+    // at the same relative horizontal position on the restored window.
+    const ratio = bounds.width > 0 ? offsetX / bounds.width : 0.5;
+    mainWindow.unmaximize();
+    bounds = mainWindow.getBounds();
+    offsetX = Math.round(bounds.width * ratio);
+    offsetY = Math.min(offsetY, 26);
+  }
+
+  const reuse = dragSizeMemo &&
+    dragSizeMemo.observed.width === bounds.width &&
+    dragSizeMemo.observed.height === bounds.height;
+  const { width, height } = reuse ? dragSizeMemo.requested : bounds;
+  let lastX = bounds.x;
+  let lastY = bounds.y;
+  const startedAt = Date.now();
+
+  const timer = setInterval(() => {
+    if (!mainWindow || mainWindow.isDestroyed() || Date.now() - startedAt > 60000) {
+      stopWindowDrag();
+      return;
+    }
+    const p = screen.getCursorScreenPoint();
+    const x = p.x - offsetX;
+    const y = p.y - offsetY;
+    if (x === lastX && y === lastY) return;
+    lastX = x;
+    lastY = y;
+    // setBounds with a fixed size avoids the Windows mixed-DPI bug where
+    // setPosition slowly grows the window while crossing monitors.
+    mainWindow.setBounds({ x, y, width, height });
+  }, 8);
+
+  windowDrag = { timer, width, height };
+}
+
+function stopWindowDrag() {
+  if (!windowDrag) return;
+  clearInterval(windowDrag.timer);
+  const { width, height } = windowDrag;
+  windowDrag = null;
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    const b = mainWindow.getBounds();
+    dragSizeMemo = { requested: { width, height }, observed: { width: b.width, height: b.height } };
+    mainWindow.emit("move");
+  }
+}
+
 function createWindow() {
   const iconImg = getAppIcon();
 
@@ -321,7 +464,9 @@ function createWindow() {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false
+      sandbox: false,
+      zoomFactor: getSavedZoomFactor(appData),
+      spellcheck: false
     }
   };
 
@@ -339,22 +484,36 @@ function createWindow() {
 
   let boundsSaveTimer = null;
   const debouncedSaveBounds = () => {
-    if (!mainWindow || mainWindow.isMinimized() || mainWindow.isMaximized()) return;
+    if (!mainWindow || mainWindow.isMinimized() || mainWindow.isMaximized() || mainWindow.isFullScreen()) return;
     clearTimeout(boundsSaveTimer);
     boundsSaveTimer = setTimeout(() => {
       try {
-        if (!mainWindow || mainWindow.isDestroyed()) return;
-        const currentBounds = mainWindow.getBounds();
+        if (!mainWindow || mainWindow.isDestroyed() || windowDrag) return;
+        const b = mainWindow.getBounds();
         const currentData = loadAppData();
         currentData.settings = currentData.settings || {};
-        currentData.settings.windowBounds = currentBounds;
+        const prev = currentData.settings.windowBounds;
+        if (prev && prev.x === b.x && prev.y === b.y && prev.width === b.width && prev.height === b.height) return;
+        currentData.settings.windowBounds = b;
         saveAppData(currentData);
       } catch (_) {}
-    }, 600);
+    }, 700);
   };
 
   mainWindow.on("resize", debouncedSaveBounds);
   mainWindow.on("move", debouncedSaveBounds);
+  mainWindow.on("blur", stopWindowDrag);
+
+  // Ctrl + mouse wheel (and touchpad pinch) arrive here; Electron does not zoom by itself.
+  // Throttled: precision touchpads fire bursts of events per gesture, which
+  // would otherwise slam straight to 50% / 200%.
+  let lastWheelZoomAt = 0;
+  mainWindow.webContents.on("zoom-changed", (event, direction) => {
+    const now = Date.now();
+    if (now - lastWheelZoomAt < 90) return;
+    lastWheelZoomAt = now;
+    stepZoom(direction === "in" ? 1 : -1);
+  });
 
   mainWindow.loadURL(`http://127.0.0.1:${rendererPort}/index.html`);
 
@@ -363,6 +522,8 @@ function createWindow() {
   });
 
   mainWindow.webContents.on("did-finish-load", () => {
+    // Re-apply the saved zoom (a reload resets it) and sync the titlebar readout.
+    applyZoom(getSavedZoomFactor(loadAppData()), { persist: false, announce: false });
     mainWindow.show();
     mainWindow.focus();
   });
@@ -384,11 +545,22 @@ function createWindow() {
     }
   });
 
-  // Keyboard ergonomics: F11 toggles full-screen view
+  // Keyboard ergonomics: F11 toggles full-screen view; Ctrl +/-/0 zoom.
+  // The app menu is removed, so Chromium's default zoom accelerators don't exist.
   mainWindow.webContents.on("before-input-event", (event, input) => {
-    if (input.type === "keyDown" && input.key === "F11") {
+    if (input.type !== "keyDown") return;
+    if (input.key === "F11") {
       event.preventDefault();
       mainWindow.setFullScreen(!mainWindow.isFullScreen());
+      return;
+    }
+    if ((input.control || input.meta) && !input.alt) {
+      const zoomAction = getZoomShortcutAction(input);
+      if (zoomAction) {
+        event.preventDefault();
+        if (zoomAction === "reset") applyZoom(1);
+        else stepZoom(zoomAction === "in" ? 1 : -1);
+      }
     }
   });
 
@@ -836,6 +1008,19 @@ ipcMain.on("window-maximize", () => {
   }
 });
 
+ipcMain.on("window-drag-start", () => startWindowDrag());
+ipcMain.on("window-drag-end", () => stopWindowDrag());
+
+ipcMain.on("zoom-step", (event, action) => {
+  if (action === "reset") applyZoom(1);
+  else if (action === "in" || action === "out") stepZoom(action === "in" ? 1 : -1);
+});
+
+ipcMain.handle("get-zoom", () => {
+  const f = mainWindow && !mainWindow.isDestroyed() ? mainWindow.webContents.getZoomFactor() : 1;
+  return { factor: f, percent: Math.round(f * 100) };
+});
+
 ipcMain.on("window-close", () => {
   if (mainWindow) {
     mainWindow.hide();
@@ -1109,5 +1294,14 @@ ipcMain.handle("apply-update-and-restart", async (event, filePath) => {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { rollOverPendingTasks, applyDailyStreak, compareVersions, saveDataOrFailure };
+  module.exports = {
+    rollOverPendingTasks,
+    applyDailyStreak,
+    compareVersions,
+    saveDataOrFailure,
+    clampZoom,
+    nextZoomStep,
+    getZoomShortcutAction,
+    getSavedZoomFactor
+  };
 }

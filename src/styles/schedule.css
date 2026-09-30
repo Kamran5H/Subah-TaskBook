@@ -36,7 +36,6 @@
   border-radius: var(--radius-lg);
   padding: 18px;
   box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(16px);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -290,7 +289,6 @@
   border-radius: var(--radius-lg);
   padding: 20px;
   box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(16px);
   display: flex;
   flex-direction: column;
   gap: 16px;

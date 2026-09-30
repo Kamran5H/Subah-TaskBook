@@ -34,7 +34,9 @@ Most modern task managers fail because they create anxiety: rigid deadlines turn
 - **🎉 Surprise Reward Engine**: Completing tasks triggers procedural confetti animations, motivational milestone badges, and surprise reward cards.
 - **🔒 100% Local & Sovereign**: Zero cloud accounts, zero tracking, and zero subscription paywalls. All task data and journal entries are encrypted and stored locally.
 - **📖 Integrated Life Diary**: Dedicated evening reflection mode to record gratitude, lessons learned, and breakthroughs.
-- **⚡ Lightweight Desktop Performance**: Zero idle CPU consumption with instant keyboard shortcuts (`Ctrl+N` new task, `Ctrl+D` toggle done).
+- **⚡ Lightweight Desktop Performance**: No blur/repaint-heavy effects, animations pause when the window is in the background, and long task lists / diary history render only what is on screen.
+- **🔍 Zoom In / Out**: `Ctrl +` / `Ctrl -` / `Ctrl 0`, `Ctrl` + mouse wheel, or the `− 100% +` control in the title bar. The zoom level is remembered.
+- **🪟 Move & Maximize Anywhere**: Drag the title bar or any empty area of a page to move the window; double-click either to maximize / restore. `F11` toggles full screen.
 
 ---
 

@@ -32,27 +32,27 @@
 
     <!-- Segmented Navigation Pill Tabs -->
     <nav class="nav-tabs-bar">
-      <button class="nav-tab-btn active" data-tab="checklist">
+      <button class="nav-tab-btn active" data-tab="checklist" title="Today's Tasks">
         <span class="tab-icon">📋</span>
         <span class="tab-label">Today's Tasks</span>
       </button>
-      <button class="nav-tab-btn" data-tab="schedule">
+      <button class="nav-tab-btn" data-tab="schedule" title="Schedule">
         <span class="tab-icon">📅</span>
         <span class="tab-label">Schedule</span>
       </button>
-      <button class="nav-tab-btn" data-tab="rewards">
+      <button class="nav-tab-btn" data-tab="rewards" title="Rewards">
         <span class="tab-icon">🎁</span>
         <span class="tab-label">Rewards</span>
       </button>
-      <button class="nav-tab-btn" data-tab="diary">
+      <button class="nav-tab-btn" data-tab="diary" title="Diary">
         <span class="tab-icon">📖</span>
         <span class="tab-label">Diary</span>
       </button>
-      <button class="nav-tab-btn" data-tab="live-share">
+      <button class="nav-tab-btn" data-tab="live-share" title="Live Share">
         <span class="tab-icon">🤝</span>
         <span class="tab-label">Live Share</span>
       </button>
-      <button class="nav-tab-btn" data-tab="settings">
+      <button class="nav-tab-btn" data-tab="settings" title="Settings">
         <span class="tab-icon">⚙️</span>
         <span class="tab-label">Settings</span>
       </button>
@@ -60,6 +60,11 @@
 
     <!-- Window Controls -->
     <div class="titlebar-controls">
+      <div class="zoom-control-group" title="Zoom (Ctrl + / Ctrl - / Ctrl 0, or Ctrl + mouse wheel)">
+        <button id="btn-zoom-out" class="zoom-btn" title="Zoom out (Ctrl -)">&minus;</button>
+        <button id="btn-zoom-reset" class="zoom-btn zoom-level-btn" title="Reset zoom to 100% (Ctrl 0)">100%</button>
+        <button id="btn-zoom-in" class="zoom-btn" title="Zoom in (Ctrl +)">+</button>
+      </div>
       <button id="btn-win-min" class="window-btn" title="Minimize to Tray">
         <svg width="10" height="1" viewBox="0 0 10 1"><rect width="10" height="1" fill="currentColor"/></svg>
       </button>
@@ -625,7 +630,7 @@
                 </div>
                 <span class="setting-item-desc">Connected to official repository: <strong>Kamran5H/Subah-TaskBook</strong>. Whenever updates or enhancements are made on your machine and published, friends are notified instantly.</span>
               </div>
-              <div style="display: flex; gap: 10px; align-items: center;">
+              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <button id="btn-check-updates-now" class="btn-glow-primary" style="padding: 8px 18px; font-size: 12px;">
                   🔄 Check for Updates Now
                 </button>
@@ -654,7 +659,7 @@
                 <span class="setting-item-title">Safe Data Vault</span>
                 <span class="setting-item-desc">Safely export all your tasks, reflections, streaks, and custom rewards as a JSON file, or restore from a previous backup anytime.</span>
               </div>
-              <div style="display: flex; gap: 10px; align-items: center;">
+              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <button id="btn-export-backup" class="btn-glow-primary" style="padding: 8px 16px; font-size: 12px;">
                   📥 Export Backup JSON
                 </button>
@@ -837,6 +842,9 @@
 
   <!-- Toast Notification Container -->
   <div id="toast-container" class="toast-container"></div>
+
+  <!-- Transient zoom level readout -->
+  <div id="zoom-indicator" class="zoom-indicator" aria-live="polite"></div>
 
   <!-- Application Scripts -->
   <script src="js/lib/peerjs.min.js"></script>

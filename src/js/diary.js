@@ -1,4 +1,12 @@
 // Life & Focus Diary Tab Module for Subah Task Book
+
+// Intl formatters are expensive to construct; the timeline formats every task
+// of every recorded day, so build each one once and reuse it.
+const DIARY_FORMATTERS = {};
+function diaryFormatter(key, locale, options) {
+  if (!DIARY_FORMATTERS[key]) DIARY_FORMATTERS[key] = new Intl.DateTimeFormat(locale, options);
+  return DIARY_FORMATTERS[key];
+}
 // Provides a rich, interactive, chronological journal of all daily goals, exact completion timings, and lifetime statistics.
 
 class SubahDiary {
@@ -34,11 +42,18 @@ class SubahDiary {
     this.statStreakEl = document.getElementById("diary-stat-streak");
 
     // Search Input Listener
+    // Debounced: the timeline spans every day ever recorded, so re-rendering on
+    // each keystroke gets expensive as history grows.
     if (this.searchInput) {
       this.searchInput.value = "";
+      let searchTimer = null;
       this.searchInput.addEventListener("input", (e) => {
-        this.searchQuery = e.target.value.toLowerCase().trim();
-        this.render();
+        const value = e.target.value;
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+          this.searchQuery = value.toLowerCase().trim();
+          this.render();
+        }, 150);
       });
     }
 
@@ -59,7 +74,14 @@ class SubahDiary {
       exportBtn.addEventListener("click", () => this.exportAllMarkdown());
     }
 
-    this.render();
+    if (!this.isTabHidden()) this.render();
+  }
+
+  // Skip the full timeline rebuild while the Diary tab is hidden; switching to
+  // the tab calls updateData again and renders fresh data then.
+  isTabHidden() {
+    const tab = typeof document !== "undefined" && document.getElementById ? document.getElementById("tab-diary") : null;
+    return Boolean(tab && tab.classList && !tab.classList.contains("active"));
   }
 
   updateData(tasksByDate, todayDate, streak, reflectionsByDate) {
@@ -67,7 +89,16 @@ class SubahDiary {
     if (reflectionsByDate) this.reflectionsByDate = reflectionsByDate;
     if (todayDate) this.todayDate = todayDate;
     if (typeof streak === "number") this.streak = streak;
+    if (this.isTabHidden()) {
+      this.needsRender = true;
+      return;
+    }
     this.render();
+  }
+
+  // Called when the Diary tab is opened: re-render only if data changed while hidden.
+  onOpen() {
+    if (this.needsRender !== false) this.render();
   }
 
   getTodayDateString() {
@@ -82,7 +113,7 @@ class SubahDiary {
     if (!timestamp) return "";
     try {
       const d = new Date(timestamp);
-      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      return diaryFormatter("time", [], { hour: "2-digit", minute: "2-digit" }).format(d);
     } catch (_) {
       return "";
     }
@@ -96,12 +127,12 @@ class SubahDiary {
       const isYesterday = this.isYesterday(dateStr);
 
       const prefix = isToday ? "Today" : (isYesterday ? "Yesterday" : "");
-      const fullDate = dateObj.toLocaleDateString("en-US", {
+      const fullDate = diaryFormatter("heading", "en-US", {
         weekday: "short",
         month: "short",
         day: "numeric",
         year: "numeric"
-      });
+      }).format(dateObj);
 
       return { prefix, fullDate, isToday, isYesterday };
     } catch (_) {
@@ -122,7 +153,7 @@ class SubahDiary {
     try {
       const [y, m, d] = dateStr.split("-").map(n => parseInt(n, 10));
       const dateObj = new Date(y, m - 1, d);
-      const formatter = new Intl.DateTimeFormat("en-TN-u-ca-islamic-umalqura", {
+      const formatter = diaryFormatter("hijri", "en-TN-u-ca-islamic-umalqura", {
         day: "numeric",
         month: "short",
         year: "numeric"
@@ -166,6 +197,7 @@ class SubahDiary {
   }
 
   render() {
+    this.needsRender = false;
     this.updateStats();
     if (!this.timelineContainer) return;
 

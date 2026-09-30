@@ -28,6 +28,17 @@ contextBridge.exposeInMainWorld("subahAPI", {
   windowMaximize: () => ipcRenderer.send("window-maximize"),
   windowClose: () => ipcRenderer.send("window-close"),
   appQuit: () => ipcRenderer.send("app-quit"),
+  windowDragStart: () => ipcRenderer.send("window-drag-start"),
+  windowDragEnd: () => ipcRenderer.send("window-drag-end"),
+
+  // Zoom
+  zoomIn: () => ipcRenderer.send("zoom-step", "in"),
+  zoomOut: () => ipcRenderer.send("zoom-step", "out"),
+  zoomReset: () => ipcRenderer.send("zoom-step", "reset"),
+  getZoom: () => ipcRenderer.invoke("get-zoom"),
+  onZoomChanged: (callback) => {
+    ipcRenderer.on("zoom-changed", (event, data) => callback(data));
+  },
 
   // External URL
   openExternal: (url) => ipcRenderer.invoke("open-external", url),

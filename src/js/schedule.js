@@ -136,6 +136,9 @@ class SubahSchedule {
   updateData(tasksByDate, todayDate) {
     if (tasksByDate) this.tasksByDate = tasksByDate;
     if (todayDate) this.todayDate = todayDate;
+    // Hidden tab: onOpen() re-renders when the user switches to Schedule.
+    const tab = typeof document !== "undefined" && document.getElementById ? document.getElementById("tab-schedule") : null;
+    if (tab && tab.classList && !tab.classList.contains("active")) return;
     this.renderCalendar();
     this.renderSelectedDayTasks();
   }

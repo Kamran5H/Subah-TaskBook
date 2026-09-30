@@ -45,6 +45,61 @@ class SubahChecklist {
         this.render();
       });
     });
+
+    this.bindListDelegation();
+  }
+
+  // One set of listeners on the list container instead of ~7 per card:
+  // re-rendering a long list no longer re-creates thousands of closures.
+  bindListDelegation() {
+    if (!this.container || this.delegationBound) return;
+    this.delegationBound = true;
+
+    const taskFor = (el) => {
+      const card = el.closest(".task-item-card");
+      if (!card) return {};
+      const id = card.getAttribute("data-id");
+      return { card, task: this.tasks.find(t => String(t.id) === id) };
+    };
+
+    this.container.addEventListener("click", (e) => {
+      if (e.target.closest("#btn-all-done-reward")) {
+        if (window.subahRewards) window.subahRewards.presentSurpriseReward(null);
+        return;
+      }
+      const btn = e.target.closest(".custom-checkbox-btn, .priority-tag, .btn-task-action");
+      if (!btn) return;
+      const { card, task } = taskFor(btn);
+      if (!task) return;
+      e.stopPropagation();
+      if (btn.classList.contains("custom-checkbox-btn")) this.toggleTask(task.id);
+      else if (btn.classList.contains("priority-tag")) this.cyclePriority(task.id);
+      else if (btn.classList.contains("pin")) this.togglePin(task.id);
+      else if (btn.classList.contains("privacy")) this.togglePrivacy(task.id);
+      else if (btn.classList.contains("defer")) this.deferToTomorrow(task.id);
+      else if (btn.classList.contains("edit")) this.startInlineEdit(card, task);
+      else if (btn.classList.contains("replay-reward")) window.subahRewards.presentSurpriseReward(task, true);
+      else if (btn.classList.contains("delete")) this.deleteTask(task.id);
+    });
+
+    this.container.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const tag = e.target.closest(".priority-tag");
+      if (!tag) return;
+      const { task } = taskFor(tag);
+      if (!task) return;
+      e.preventDefault();
+      e.stopPropagation();
+      this.cyclePriority(task.id);
+    });
+
+    // Inline text double click to edit
+    this.container.addEventListener("dblclick", (e) => {
+      const text = e.target.closest(".task-text-body");
+      if (!text) return;
+      const { card, task } = taskFor(text);
+      if (task) this.startInlineEdit(card, task);
+    });
   }
 
   setData(todayDate, tasks, streak = 0) {
@@ -88,27 +143,20 @@ class SubahChecklist {
       return;
     }
 
+    let html = "";
+
     // Celebration banner when all goals are achieved
     if (pendingTasks.length === 0 && total > 0) {
-      const banner = document.createElement("div");
-      banner.className = "checklist-all-done-banner";
-      banner.innerHTML = `
-        <div class="all-done-icon">🌟</div>
-        <div class="all-done-text">
-          <h4 class="all-done-title">All Daily Goals Accomplished!</h4>
-          <p class="all-done-sub">Your momentum and streak are shining bright today. Recharge with a surprise reward.</p>
+      html += `
+        <div class="checklist-all-done-banner">
+          <div class="all-done-icon">🌟</div>
+          <div class="all-done-text">
+            <h4 class="all-done-title">All Daily Goals Accomplished!</h4>
+            <p class="all-done-sub">Your momentum and streak are shining bright today. Recharge with a surprise reward.</p>
+          </div>
+          <button class="btn-glow-primary all-done-btn" id="btn-all-done-reward">🎲 Surprise Me Now</button>
         </div>
-        <button class="btn-glow-primary all-done-btn" id="btn-all-done-reward">🎲 Surprise Me Now</button>
       `;
-      const bannerBtn = banner.querySelector("#btn-all-done-reward");
-      if (bannerBtn) {
-        bannerBtn.addEventListener("click", () => {
-          if (window.subahRewards) {
-            window.subahRewards.presentSurpriseReward(null);
-          }
-        });
-      }
-      this.container.appendChild(banner);
     }
 
     // Filter tasks based on currentFilter
@@ -118,24 +166,25 @@ class SubahChecklist {
     else if (this.currentFilter === "high") displayTasks = highTasks;
 
     if (displayTasks.length === 0) {
-      const emptyNotice = document.createElement("div");
-      emptyNotice.style.cssText = "text-align: center; padding: 28px 16px; color: var(--text-muted); font-size: 13px;";
-      emptyNotice.textContent = `No ${this.currentFilter} tasks to show right now.`;
-      this.container.appendChild(emptyNotice);
-      this.updateProgress();
-      return;
+      html += `<div style="text-align: center; padding: 28px 16px; color: var(--text-muted); font-size: 13px;">No ${this.escapeHtml(this.currentFilter)} tasks to show right now.</div>`;
+    } else {
+      html += displayTasks.map(task => this.renderTaskCard(task)).join("");
     }
 
-    displayTasks.forEach((task) => {
-      const card = document.createElement("div");
-      card.className = `task-item-card ${task.completed ? "completed" : ""} ${task.pinned ? "pinned" : ""}`;
-      card.setAttribute("data-id", task.id);
+    // Single DOM write for the whole list; clicks are handled by bindListDelegation().
+    this.container.innerHTML = html;
+    this.bindListDelegation();
 
-      const priorityLabel = (task.priority || "normal").toUpperCase();
+    this.updateProgress();
+  }
 
-      card.innerHTML = `
+  renderTaskCard(task) {
+    const priorityLabel = (task.priority || "normal").toUpperCase();
+    const priorityClass = this.escapeHtml(task.priority || "normal");
+    return `
+      <div class="task-item-card ${task.completed ? "completed" : ""} ${task.pinned ? "pinned" : ""}" data-id="${this.escapeHtml(String(task.id))}">
         <div class="task-left-section">
-          <button class="custom-checkbox-btn" title="${task.completed ? 'Mark pending' : 'Complete task & claim reward!'}">
+          <button class="custom-checkbox-btn" title="${task.completed ? "Mark pending" : "Complete task & claim reward!"}">
             <svg class="checkmark-svg" viewBox="0 0 24 24">
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
@@ -143,23 +192,23 @@ class SubahChecklist {
           <div class="task-content-wrapper">
             <span class="task-text-body">${this.escapeHtml(task.text)}</span>
             <div class="task-tags-row">
-              ${task.pinned ? '<span class="pinned-tag-pill" title="Pinned to top">📌 PINNED</span>' : ''}
-              <span class="priority-tag ${task.priority || 'normal'}" role="button" tabindex="0" title="Click to change priority (High / Normal / Low)">${priorityLabel}</span>
-              ${task.isPrivate ? '<span class="pinned-tag-pill" style="background: rgba(251,191,36,0.15); color: #fbbf24; border-color: rgba(251,191,36,0.3);" title="Private Goal - Hidden from live share">🔒 PRIVATE</span>' : ''}
-              ${task.carriedOverFrom ? `<span class="diary-carried-pill" style="font-size: 10px; padding: 1px 7px;">🔄 Carried from ${task.carriedOverFrom}</span>` : ''}
-              ${task.rewardClaimed ? '<span class="reward-claimed-pill">🎁 Reward Claimed</span>' : ''}
+              ${task.pinned ? '<span class="pinned-tag-pill" title="Pinned to top">📌 PINNED</span>' : ""}
+              <span class="priority-tag ${priorityClass}" role="button" tabindex="0" title="Click to change priority (High / Normal / Low)">${this.escapeHtml(priorityLabel)}</span>
+              ${task.isPrivate ? '<span class="pinned-tag-pill" style="background: rgba(251,191,36,0.15); color: #fbbf24; border-color: rgba(251,191,36,0.3);" title="Private Goal - Hidden from live share">🔒 PRIVATE</span>' : ""}
+              ${task.carriedOverFrom ? `<span class="diary-carried-pill" style="font-size: 10px; padding: 1px 7px;">🔄 Carried from ${this.escapeHtml(task.carriedOverFrom)}</span>` : ""}
+              ${task.rewardClaimed ? '<span class="reward-claimed-pill">🎁 Reward Claimed</span>' : ""}
             </div>
           </div>
         </div>
         <div class="task-right-actions">
-          <button class="btn-task-action pin ${task.pinned ? 'active' : ''}" title="${task.pinned ? 'Unpin task' : 'Pin to top'}">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="${task.pinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+          <button class="btn-task-action pin ${task.pinned ? "active" : ""}" title="${task.pinned ? "Unpin task" : "Pin to top"}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="${task.pinned ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2">
               <line x1="12" y1="17" x2="12" y2="22"></line>
               <path d="M5 17h14v-2l-2-2V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v8l-2 2v2z"></path>
             </svg>
           </button>
-          <button class="btn-task-action privacy ${task.isPrivate ? 'active' : ''}" title="${task.isPrivate ? 'Private (Hidden from live share) - Click to make public' : 'Public in live share - Click to make private'}">
-            <span style="font-size: 13px;">${task.isPrivate ? '🔒' : '👁️'}</span>
+          <button class="btn-task-action privacy ${task.isPrivate ? "active" : ""}" title="${task.isPrivate ? "Private (Hidden from live share) - Click to make public" : "Public in live share - Click to make private"}">
+            <span style="font-size: 13px;">${task.isPrivate ? "🔒" : "👁️"}</span>
           </button>
           ${!task.completed ? `
             <button class="btn-task-action defer" title="Defer task to tomorrow">
@@ -168,7 +217,7 @@ class SubahChecklist {
                 <polyline points="6 17 11 12 6 7"></polyline>
               </svg>
             </button>
-          ` : ''}
+          ` : ""}
           <button class="btn-task-action edit" title="Edit Task">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
@@ -180,7 +229,7 @@ class SubahChecklist {
                 <polygon points="5 3 19 12 5 21 5 3"></polygon>
               </svg>
             </button>
-          ` : ''}
+          ` : ""}
           <button class="btn-task-action delete" title="Delete Task">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="3 6 5 6 21 6"></polyline>
@@ -188,86 +237,7 @@ class SubahChecklist {
             </svg>
           </button>
         </div>
-      `;
-
-      // Checkbox click listener
-      const checkBtn = card.querySelector(".custom-checkbox-btn");
-      checkBtn.addEventListener("click", () => this.toggleTask(task.id));
-
-      // Priority tag: click (or Enter/Space) to cycle High → Normal → Low
-      const priorityTag = card.querySelector(".priority-tag");
-      if (priorityTag) {
-        priorityTag.addEventListener("click", (e) => {
-          e.stopPropagation();
-          this.cyclePriority(task.id);
-        });
-        priorityTag.addEventListener("keydown", (e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            e.stopPropagation();
-            this.cyclePriority(task.id);
-          }
-        });
-      }
-
-      // Inline text double click to edit
-      const textSpan = card.querySelector(".task-text-body");
-      textSpan.addEventListener("dblclick", () => this.startInlineEdit(card, task));
-
-      // Pin button listener
-      const pinBtn = card.querySelector(".btn-task-action.pin");
-      if (pinBtn) {
-        pinBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          this.togglePin(task.id);
-        });
-      }
-
-      // Privacy button listener
-      const privacyBtn = card.querySelector(".btn-task-action.privacy");
-      if (privacyBtn) {
-        privacyBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          this.togglePrivacy(task.id);
-        });
-      }
-
-      // Defer to tomorrow listener
-      const deferBtn = card.querySelector(".btn-task-action.defer");
-      if (deferBtn) {
-        deferBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          this.deferToTomorrow(task.id);
-        });
-      }
-
-      // Edit button listener
-      const editBtn = card.querySelector(".btn-task-action.edit");
-      editBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        this.startInlineEdit(card, task);
-      });
-
-      // Replay reward button
-      const replayBtn = card.querySelector(".replay-reward");
-      if (replayBtn) {
-        replayBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          window.subahRewards.presentSurpriseReward(task, true);
-        });
-      }
-
-      // Delete button listener
-      const deleteBtn = card.querySelector(".btn-task-action.delete");
-      deleteBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        this.deleteTask(task.id);
-      });
-
-      this.container.appendChild(card);
-    });
-
-    this.updateProgress();
+      </div>`;
   }
 
   async toggleTask(taskId) {

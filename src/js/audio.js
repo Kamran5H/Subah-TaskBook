@@ -17,6 +17,21 @@ class SubahAudio {
     if (this.ctx && this.ctx.state === "suspended") {
       this.ctx.resume();
     }
+    // A running AudioContext keeps an audio thread spinning even in silence.
+    // Suspend it shortly after the last sound; resume() above is near-instant.
+    if (this.ctx) {
+      clearTimeout(this.suspendTimer);
+      this.suspendTimer = setTimeout(() => {
+        if (this.ctx && this.ctx.state === "running") this.ctx.suspend();
+      }, 4000);
+    }
+  }
+
+  // Opening the audio device costs ~0.5s the first time; do it while idle so
+  // the first checkbox click doesn't stall.
+  prewarm() {
+    if (!this.enabled || this.ctx) return;
+    try { this.initContext(); } catch (_) {}
   }
 
   setEnabled(val) {

@@ -55,12 +55,18 @@
 
 .streak-fire-icon {
   font-size: 20px;
-  animation: flickerFire 1.6s infinite alternate;
+  display: inline-block;
+  /* Static glow + transform-only animation: stays on the compositor instead of
+     re-painting a drop-shadow filter every frame. */
+  filter: drop-shadow(0 0 7px #f59e0b);
+  will-change: transform;
+  /* ~10s of flicker, then rest: an endless animation costs ~5% CPU while focused. */
+  animation: flickerFire 1.6s ease-in-out 6 alternate;
 }
 
 @keyframes flickerFire {
-  0% { transform: scale(1) rotate(-3deg); filter: drop-shadow(0 0 4px #f59e0b); }
-  100% { transform: scale(1.15) rotate(3deg); filter: drop-shadow(0 0 10px #f59e0b); }
+  0% { transform: scale(1) rotate(-3deg); }
+  100% { transform: scale(1.15) rotate(3deg); }
 }
 
 .streak-info-text {
@@ -93,7 +99,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  backdrop-filter: blur(16px);
 }
 
 .quote-icon {
@@ -118,7 +123,6 @@
   display: flex;
   flex-direction: column;
   gap: 9px;
-  backdrop-filter: blur(16px);
 }
 
 .progress-header-row {
@@ -169,7 +173,6 @@
   border-radius: var(--radius-md);
   padding: 7px 10px 7px 16px;
   transition: all 0.2s ease;
-  backdrop-filter: blur(16px);
 }
 
 .add-task-bar:focus-within {
@@ -243,14 +246,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  backdrop-filter: blur(16px);
-  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
-  animation: glowPulse 2.5s infinite alternate;
-}
-
-@keyframes glowPulse {
-  0% { box-shadow: 0 4px 16px rgba(245, 158, 11, 0.12); }
-  100% { box-shadow: 0 8px 30px rgba(245, 158, 11, 0.28); }
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.2);
 }
 
 .all-done-icon {
@@ -300,10 +296,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(16px);
+  /* Off-screen cards skip style/layout/paint entirely: long lists (rolled-over
+     backlog, busy schedule days) stay instant to render and scroll. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 66px;
 }
 
 .task-item-card:hover {

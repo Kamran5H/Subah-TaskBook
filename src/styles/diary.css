@@ -55,7 +55,6 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  backdrop-filter: blur(16px);
   transition: all 0.2s ease;
 }
 
@@ -93,9 +92,9 @@
   z-index: 20;
   padding: 8px 0;
   margin: -4px 0 0 0;
-  background: var(--surface-header, rgba(8, 12, 22, 0.88));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  /* Opaque (header tint over the base colour) instead of a backdrop blur:
+     a blurred sticky bar re-rasterises on every scroll frame. */
+  background: linear-gradient(var(--surface-header, rgba(8, 12, 22, 0.88)), var(--surface-header, rgba(8, 12, 22, 0.88))), var(--bg-base);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -186,10 +185,12 @@
   flex-direction: column;
   gap: 14px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(16px);
   position: relative;
   overflow: hidden;
   transition: border-color 0.2s ease;
+  /* The timeline holds every recorded day; only lay out the visible ones. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 420px;
 }
 
 .diary-day-card:hover {

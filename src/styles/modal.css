@@ -7,8 +7,6 @@
   width: 100%;
   height: 100%;
   background: rgba(4, 7, 14, 0.88);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
   z-index: 5000;
   display: none;
   align-items: center;
@@ -37,7 +35,6 @@
   position: relative;
   transform: scale(0.95) translateY(10px);
   transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  backdrop-filter: blur(24px);
 }
 
 .modal-overlay.active .modal-card {
@@ -469,7 +466,6 @@
   gap: 10px;
   cursor: pointer;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  backdrop-filter: blur(16px);
 }
 
 .theme-card-btn:hover {
@@ -522,7 +518,6 @@
   padding: 8px 18px;
   display: flex;
   flex-direction: column;
-  backdrop-filter: blur(16px);
 }
 
 .setting-row {
@@ -563,13 +558,17 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  backdrop-filter: blur(16px);
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  /* minmax(0, …) lets the columns shrink below the <select>'s intrinsic width */
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: 10px;
+}
+
+@media (max-width: 560px) {
+  .form-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 .form-input, .form-select {

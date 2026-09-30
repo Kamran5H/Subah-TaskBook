@@ -76,15 +76,20 @@ class SubahApp {
     const todayTasks = (this.appData.tasksByDate && this.appData.tasksByDate[this.todayDate]) || [];
     window.subahChecklist.setData(this.todayDate, todayTasks, this.appData.streak || 1);
 
-    // Double click titlebar to maximize / restore
+    // Double click titlebar to maximize / restore. The drag region itself is
+    // handled natively by Windows; this covers the non-drag gaps in the bar.
     const titlebar = document.querySelector(".titlebar");
     if (titlebar) {
       titlebar.addEventListener("dblclick", (e) => {
-        if (!e.target.closest("button, input, a, nav")) {
+        if (!e.target.closest("button, input, a, nav, .titlebar-controls")) {
           window.subahAPI.windowMaximize();
         }
       });
     }
+
+    this.initWindowDragging();
+    this.initZoomControls();
+    this.initIdleAnimationPause();
 
     // Monitor midnight rollover on focus and interval
     window.addEventListener("focus", () => this.checkDateRollover());
@@ -92,6 +97,11 @@ class SubahApp {
 
     // Default to Today's Tasks
     this.switchTab("checklist");
+
+    if (window.subahAudio && typeof window.subahAudio.prewarm === "function") {
+      const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1500));
+      idle(() => window.subahAudio.prewarm(), { timeout: 3000 });
+    }
   }
 
   onTasksUpdated(date, tasks, streak) {
@@ -129,7 +139,8 @@ class SubahApp {
       window.subahSchedule.updateData(this.appData.tasksByDate || {}, this.todayDate);
     }
     if (window.subahRewards) {
-      window.subahRewards.init(this.appData.customRewards || []);
+      // updateCustomRewards, not init(): init binds DOM listeners and must run once.
+      window.subahRewards.updateCustomRewards(this.appData.customRewards || []);
     }
     if (window.subahDiary) {
       window.subahDiary.updateData(this.appData.tasksByDate || {}, this.todayDate, this.appData.streak || 1, this.appData.reflectionsByDate || {});
@@ -164,6 +175,118 @@ class SubahApp {
     }
   }
 
+  // Press and drag on any empty area (tab background, page headers, footer) to
+  // move the window; double-click the same areas to maximize / restore.
+  // Interactive elements and text inside cards are never drag handles.
+  isWindowDragSurface(target) {
+    if (!target || target.nodeType !== 1) return false;
+    if (target === document.body || target === document.documentElement) return true;
+    if (target.closest("button, input, textarea, select, a, label, iframe, [contenteditable], .modal-overlay, .titlebar")) {
+      return false;
+    }
+    return target.matches(
+      ".app-container, .tab-screen, [data-window-drag], " +
+      ".checklist-top-bar, .date-streak-group, .daily-date-heading, .hijri-date-text, " +
+      ".schedule-wrapper, .schedule-grid-container, " +
+      ".rewards-lib-header, .rewards-lib-header > div, .rewards-lib-title, .rewards-lib-subtitle, " +
+      ".diary-header, .diary-title-col, .diary-main-title, .diary-main-sub, " +
+      ".live-share-container, .live-share-top-bar, " +
+      ".settings-screen-body, .settings-header, .settings-main-title, .settings-main-sub, " +
+      ".dev-signature-line"
+    );
+  }
+
+  initWindowDragging() {
+    if (!window.subahAPI || !window.subahAPI.windowDragStart) return;
+    const THRESHOLD = 4; // px of movement before a press becomes a drag (keeps clicks as clicks)
+    let pending = null;
+    let dragging = false;
+
+    const endDrag = () => {
+      if (dragging) {
+        window.subahAPI.windowDragEnd();
+        document.body.classList.remove("window-dragging");
+      }
+      if (pending && pending.el && pending.el.hasPointerCapture && pending.el.hasPointerCapture(pending.pointerId)) {
+        try { pending.el.releasePointerCapture(pending.pointerId); } catch (_) {}
+      }
+      pending = null;
+      dragging = false;
+    };
+
+    document.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0 || e.pointerType === "touch" || e.detail > 1) return;
+      if (!this.isWindowDragSurface(e.target)) return;
+      // A press on a scrollbar targets the scrolling element itself; let it scroll.
+      if (e.offsetX >= e.target.clientWidth || e.offsetY >= e.target.clientHeight) return;
+      pending ={ x: e.screenX, y: e.screenY, pointerId: e.pointerId, el: e.target };
+    });
+
+    document.addEventListener("pointermove", (e) => {
+      if (!pending || dragging) return;
+      if (Math.abs(e.screenX - pending.x) < THRESHOLD && Math.abs(e.screenY - pending.y) < THRESHOLD) return;
+      dragging = true;
+      try { pending.el.setPointerCapture(pending.pointerId); } catch (_) {}
+      const sel = window.getSelection && window.getSelection();
+      if (sel && sel.removeAllRanges) sel.removeAllRanges();
+      document.body.classList.add("window-dragging");
+      window.subahAPI.windowDragStart();
+    });
+
+    document.addEventListener("pointerup", endDrag);
+    document.addEventListener("pointercancel", endDrag);
+    window.addEventListener("blur", endDrag);
+
+    document.addEventListener("dblclick", (e) => {
+      if (e.button === 0 && this.isWindowDragSurface(e.target)) {
+        const sel = window.getSelection && window.getSelection();
+        if (sel && sel.removeAllRanges) sel.removeAllRanges();
+        window.subahAPI.windowMaximize();
+      }
+    });
+  }
+
+  initZoomControls() {
+    const api = window.subahAPI;
+    if (!api || !api.zoomIn) return;
+    const btnIn = document.getElementById("btn-zoom-in");
+    const btnOut = document.getElementById("btn-zoom-out");
+    const btnReset = document.getElementById("btn-zoom-reset");
+    const indicator = document.getElementById("zoom-indicator");
+    let hideTimer = null;
+
+    if (btnIn) btnIn.addEventListener("click", () => api.zoomIn());
+    if (btnOut) btnOut.addEventListener("click", () => api.zoomOut());
+    if (btnReset) btnReset.addEventListener("click", () => api.zoomReset());
+
+    const render = ({ percent, announce }) => {
+      if (btnReset) btnReset.textContent = `${percent}%`;
+      if (!announce || !indicator) return;
+      indicator.textContent = `Zoom ${percent}%`;
+      indicator.classList.add("visible");
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => indicator.classList.remove("visible"), 900);
+    };
+
+    if (api.onZoomChanged) api.onZoomChanged(render);
+    if (api.getZoom) {
+      api.getZoom().then((z) => z && render({ percent: z.percent, announce: false })).catch(() => {});
+    }
+  }
+
+  // Decorative CSS animations keep the GPU busy even when nobody is looking.
+  // Freeze them while the window is hidden, minimised or in the background.
+  initIdleAnimationPause() {
+    const update = () => {
+      const idle = document.hidden || !document.hasFocus();
+      document.body.classList.toggle("app-idle", idle);
+    };
+    document.addEventListener("visibilitychange", update);
+    window.addEventListener("blur", update);
+    window.addEventListener("focus", update);
+    update();
+  }
+
   getEnabledCategories() {
     return (this.appData && this.appData.settings && this.appData.settings.enabledCategories) || null;
   }
@@ -192,8 +315,20 @@ class SubahApp {
     }
 
     // Refresh diary when switching to diary tab
+    // (only rebuilds the timeline if something changed while it was hidden)
     if (tabName === "diary" && window.subahDiary) {
-      window.subahDiary.updateData(this.appData.tasksByDate, this.todayDate, this.appData.streak || 1, this.appData.reflectionsByDate || {});
+      const diary = window.subahDiary;
+      if (diary.tasksByDate !== this.appData.tasksByDate || diary.todayDate !== this.todayDate) {
+        diary.needsRender = true;
+      }
+      if (typeof diary.onOpen === "function") {
+        diary.tasksByDate = this.appData.tasksByDate || diary.tasksByDate;
+        diary.todayDate = this.todayDate;
+        if (typeof this.appData.streak === "number") diary.streak = this.appData.streak;
+        diary.onOpen();
+      } else {
+        diary.updateData(this.appData.tasksByDate, this.todayDate, this.appData.streak || 1, this.appData.reflectionsByDate || {});
+      }
     }
 
     // Refresh live share when switching to live-share tab

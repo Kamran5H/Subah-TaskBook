@@ -89,7 +89,6 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(16px);
 }
 
 .reward-card-item:hover {
