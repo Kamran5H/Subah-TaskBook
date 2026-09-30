@@ -14,6 +14,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  flex-shrink: 0;
 }
 
 .rewards-lib-title {
@@ -39,6 +40,9 @@
   gap: 8px;
   overflow-x: auto;
   padding-bottom: 2px;
+  /* A scroll container in a flex column may shrink to 0 height; the long
+     reward grid below was squashing the pills down to just their scrollbar. */
+  flex-shrink: 0;
 }
 
 .filter-pill-btn {
@@ -74,6 +78,13 @@
   gap: 14px;
   overflow-y: auto;
   padding-bottom: 12px;
+  /* The grid is the part that gives way and scrolls inside the tab. */
+  flex: 1 1 auto;
+  min-height: 0;
+  /* Cards use overflow:hidden, which lets auto rows shrink to nothing when the
+     grid is shorter than its content; size rows to the cards and scroll. */
+  grid-auto-rows: max-content;
+  align-content: start;
 }
 
 .reward-card-item {

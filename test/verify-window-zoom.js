@@ -83,6 +83,13 @@ assert(!/background-attachment\s*:\s*fixed/.test(mainCss), "fixed body backgroun
 assert(!/signatureShimmer[^;]*infinite/.test(mainCss), "always-visible footer shimmer must not run forever");
 assert(/body\.app-idle \*/.test(mainCss), "idle animation-pause rule must exist");
 
+// Rewards tab: the filter pills and reward cards must never be squashed by the
+// fixed-height tab (both collapsed to a few px before).
+const rewardsCss = fs.readFileSync(path.join(stylesDir, "rewards-library.css"), "utf-8");
+const ruleOf = (css, sel) => (css.match(new RegExp(sel.replace(".", "\\.") + "\\s*\\{([^}]*)\\}")) || [])[1] || "";
+assert(/flex-shrink:\s*0/.test(ruleOf(rewardsCss, ".rewards-filter-row")), "rewards filter row must not shrink");
+assert(/grid-auto-rows:\s*max-content/.test(ruleOf(rewardsCss, ".rewards-library-grid")), "reward grid rows must size to their cards");
+
 const diarySrc = read("src", "js", "diary.js");
 const scheduleSrc = read("src", "js", "schedule.js");
 assert(diarySrc.includes("isTabHidden()"), "diary must skip rendering while hidden");

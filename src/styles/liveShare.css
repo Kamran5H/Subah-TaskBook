@@ -437,3 +437,137 @@
     transform: translateY(-200px) scale(0.9);
   }
 }
+
+/* ===========================================================================
+   Share access: View Only vs Editable
+   =========================================================================== */
+.live-access-switch {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+}
+
+.live-access-btn {
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-secondary, #94a3b8);
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.live-access-btn:hover {
+  color: var(--text-primary, #f8fafc);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.live-access-btn.active {
+  color: #030712;
+  background: linear-gradient(135deg, var(--accent-cyan, #38bdf8), var(--accent-indigo, #818cf8));
+}
+
+.live-access-btn.active[data-access="edit"] {
+  background: linear-gradient(135deg, var(--accent-emerald, #34d399), var(--accent-gold, #fbbf24));
+}
+
+.live-peer-access-badge {
+  flex-shrink: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 99px;
+  white-space: nowrap;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+  color: var(--text-secondary, #94a3b8);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.live-peer-access-badge.edit {
+  color: var(--accent-emerald, #34d399);
+  border-color: rgba(52, 211, 153, 0.4);
+  background: rgba(52, 211, 153, 0.12);
+}
+
+/* Friend rows: read-only checkbox in View Only mode */
+.live-checkbox-btn.readonly,
+.live-checkbox-btn:disabled {
+  cursor: default !important;
+  opacity: 0.85;
+}
+
+.live-checkbox-btn.readonly:hover,
+.live-checkbox-btn:disabled:hover {
+  transform: none;
+}
+
+.live-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.live-row-action {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 3px 6px;
+  font-size: 12.5px;
+  line-height: 1;
+  color: var(--text-secondary, #94a3b8);
+  opacity: 0.75;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.live-row-action:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.live-row-action.confirm {
+  opacity: 1;
+  color: #fff;
+  background: var(--accent-rose, #f43f5e);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Completed rows strike the text only, not the action buttons */
+.live-task-row.completed {
+  text-decoration: none;
+}
+
+.live-task-row.completed .live-task-text {
+  text-decoration: line-through;
+}
+
+.live-task-edit-input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+.live-peer-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.live-peer-add-row .form-input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Header wraps at narrow widths / high zoom instead of squeezing the access switch */
+.column-header {
+  flex-wrap: wrap;
+}

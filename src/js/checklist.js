@@ -240,27 +240,34 @@ class SubahChecklist {
       </div>`;
   }
 
-  async toggleTask(taskId) {
-    const task = this.tasks.find(t => t.id === taskId);
+  // options.fromFriend: a Live Share friend (with edit access) ticked this goal.
+  // The owner gets a toast from liveShare.js instead of a reward popup stealing focus.
+  async toggleTask(taskId, options = {}) {
+    const task = this.tasks.find(t => String(t.id) === String(taskId));
     if (!task) return;
 
     task.completed = !task.completed;
 
     if (task.completed) {
       task.completedAt = Date.now();
-      task.rewardClaimed = true;
 
-      // 1. Play celebration fanfare sound
-      window.subahAudio.playCelebration();
+      if (!options.fromFriend) {
+        task.rewardClaimed = true;
 
-      // 2. Explode festive confetti
-      window.subahConfetti.burst(window.innerWidth / 2, window.innerHeight * 0.45, 100);
+        // 1. Play celebration fanfare sound
+        window.subahAudio.playCelebration();
 
-      // 3. Open Surprise Reward Gift Modal
-      window.subahRewards.presentSurpriseReward(task);
+        // 2. Explode festive confetti
+        window.subahConfetti.burst(window.innerWidth / 2, window.innerHeight * 0.45, 100);
 
-      // 4. Live Share broadcast celebration to friend
-      if (window.SubahLiveShare) {
+        // 3. Open Surprise Reward Gift Modal
+        window.subahRewards.presentSurpriseReward(task);
+      } else {
+        window.subahAudio.playClick();
+      }
+
+      // 4. Live Share broadcast celebration to friend (not back to the friend who ticked it)
+      if (window.SubahLiveShare && !options.fromFriend) {
         window.SubahLiveShare.broadcastTasksUpdate({ completedTaskText: task.text });
       }
     } else {
@@ -453,8 +460,36 @@ class SubahChecklist {
     window.subahApp.showToast("Task deferred to tomorrow 🌅", "info");
   }
 
+  // --- Live Share (Editable mode) entry points. Callers validate permission. ---
+  async addTaskFromFriend(text, friendName) {
+    const newTask = {
+      id: `task-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      text,
+      completed: false,
+      priority: "normal",
+      pinned: false,
+      createdAt: Date.now(),
+      addedBy: friendName || "Friend"
+    };
+    this.tasks.push(newTask);
+    this.sortByPriority();
+    this.render();
+    await this.persist();
+    return newTask;
+  }
+
+  async renameTask(taskId, text) {
+    const task = this.tasks.find(t => String(t.id) === String(taskId));
+    if (!task || !text || task.text === text) return null;
+    const oldText = task.text;
+    task.text = text;
+    this.render();
+    await this.persist();
+    return oldText;
+  }
+
   async deleteTask(taskId) {
-    this.tasks = this.tasks.filter(t => t.id !== taskId);
+    this.tasks = this.tasks.filter(t => String(t.id) !== String(taskId));
     window.subahAudio.playClick();
     this.render();
     await this.persist();

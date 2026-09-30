@@ -1,10 +1,26 @@
 /**
  * Subah TaskBook - Live Shareable Co-Working & Accountability Controller
  * Powered by WebRTC Data Channels (PeerJS) for serverless, zero-config P2P sync.
+ *
+ * Share access is decided per person, by the OWNER of each list:
+ *   "view" - the friend can only see my goals.
+ *   "edit" - the friend can check off, add, rename and delete my goals.
+ * Every incoming change is checked against MY setting on MY side, so a peer
+ * can never grant itself edit rights (older builds had one shared mode that
+ * either side could flip).
  */
 
 (function () {
   "use strict";
+
+  const MAX_TASK_TEXT = 300;
+  const MAX_NAME = 40;
+  // Flood guard for incoming edits: at most this many per window.
+  const EDIT_RATE_LIMIT = 20;
+  const EDIT_RATE_WINDOW_MS = 5000;
+
+  const normalizeAccess = (value) => (value === "edit" ? "edit" : "view");
+  const cleanText = (value, max) => String(value == null ? "" : value).replace(/\s+/g, " ").trim().slice(0, max);
 
   const SubahLiveShare = {
     peer: null,
@@ -13,15 +29,21 @@
     roomCode: null,
     myDisplayName: "Me",
     peerDisplayName: "Friend",
-    sharingMode: "dual", // "dual" (accountability) or "coworking"
+    myAccess: "view",        // what my friend may do with MY goals (I decide)
+    peerAccess: "view",      // what my friend lets ME do with THEIR goals (they decide)
+    peerIsLegacy: false,     // friend runs a pre-1.1 build (shared "mode", toggle-only)
     isConnected: false,
     peerTasks: [],
     peerStreak: 1,
     peerCompletedCount: 0,
+    peerEditingId: null,
+    peerRenderPending: false,
+    incomingEditTimes: [],
 
     init() {
       this.loadSavedSettings();
       this.bindEvents();
+      this.syncAccessUI();
       this.renderMyTasksPreview();
     },
 
@@ -35,6 +57,7 @@
           const hostNameInput = document.getElementById("host-display-name");
           if (hostNameInput) hostNameInput.value = savedName;
         }
+        this.myAccess = normalizeAccess(localStorage.getItem("subah_live_access"));
       } catch (_) {}
     },
 
@@ -74,7 +97,7 @@
       // Reaction Buttons
       const reactionBtns = document.querySelectorAll(".reaction-btn");
       reactionBtns.forEach((btn) => {
-        btn.addEventListener("click", (e) => {
+        btn.addEventListener("click", () => {
           const emoji = btn.getAttribute("data-emoji") || btn.textContent.trim();
           this.sendReaction(emoji);
         });
@@ -89,21 +112,89 @@
         });
       }
 
-      // Mode toggle (View-Only vs Co-working)
-      const modeSelect = document.getElementById("live-sharing-mode");
-      if (modeSelect) {
-        modeSelect.addEventListener("change", (e) => {
-          this.sharingMode = e.target.value;
-          if (this.connection && this.connection.open) {
-            this.sendPayload({ type: "mode-change", mode: this.sharingMode });
-          }
+      // Share access: lobby dropdowns (host + join cards) and in-room switch
+      document.querySelectorAll(".live-share-access-select").forEach((select) => {
+        select.addEventListener("change", (e) => this.setMyAccess(e.target.value));
+      });
+      document.querySelectorAll(".live-access-btn").forEach((btn) => {
+        btn.addEventListener("click", () => this.setMyAccess(btn.getAttribute("data-access")));
+      });
+
+      // My goals (live room preview): tick my own goals
+      const myList = document.getElementById("live-my-tasks-list");
+      if (myList) {
+        myList.addEventListener("click", (e) => {
+          const btn = e.target.closest(".live-checkbox-btn");
+          const id = btn && btn.getAttribute("data-id");
+          if (id && window.subahChecklist) window.subahChecklist.toggleTask(id);
         });
       }
+
+      // Friend's goals: tick / rename / delete (only acts when they allow editing)
+      const peerList = document.getElementById("live-peer-tasks-list");
+      if (peerList) {
+        peerList.addEventListener("click", (e) => this.handlePeerListClick(e));
+      }
+
+      // Friend's goals: add a goal
+      const addInput = document.getElementById("live-peer-add-input");
+      const addBtn = document.getElementById("btn-live-peer-add");
+      const submitAdd = () => {
+        if (!addInput) return;
+        const text = cleanText(addInput.value, MAX_TASK_TEXT);
+        if (!text) return;
+        if (this.requestAddRemoteTask(text)) addInput.value = "";
+      };
+      if (addInput) {
+        addInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") submitAdd();
+        });
+      }
+      if (addBtn) addBtn.addEventListener("click", submitAdd);
 
       // Cleanup on window unload
       window.addEventListener("beforeunload", () => {
         this.cleanupPeer();
       });
+    },
+
+    // --- SHARE ACCESS ---------------------------------------------------------
+    setMyAccess(value) {
+      const access = normalizeAccess(value);
+      const changed = access !== this.myAccess;
+      this.myAccess = access;
+      try { localStorage.setItem("subah_live_access", access); } catch (_) {}
+      this.syncAccessUI();
+      if (!changed) return;
+
+      if (this.isConnected) {
+        // Legacy peers ignore this message (and must never be sent a
+        // "mode-change": in old builds that would also unlock THEIR list).
+        this.sendPayload({ type: "access-change", access });
+      }
+      if (window.subahApp) {
+        window.subahApp.showToast(
+          access === "edit"
+            ? "✏️ Editable: friends can now check off, add, edit & delete your goals"
+            : "👁️ View Only: friends can see your goals but not change them",
+          "info"
+        );
+      }
+    },
+
+    syncAccessUI() {
+      document.querySelectorAll(".live-share-access-select").forEach((select) => {
+        select.value = this.myAccess;
+      });
+      document.querySelectorAll(".live-access-btn").forEach((btn) => {
+        const on = btn.getAttribute("data-access") === this.myAccess;
+        btn.classList.toggle("active", on);
+        btn.setAttribute("aria-checked", on ? "true" : "false");
+      });
+    },
+
+    canEditPeer() {
+      return this.isConnected && this.peerAccess === "edit";
     },
 
     generateRoomCode() {
@@ -138,6 +229,8 @@
         this.myDisplayName = nameInput.value.trim();
         try { localStorage.setItem("subah_live_name", this.myDisplayName); } catch (_) {}
       }
+      const accessSelect = document.getElementById("host-share-access");
+      if (accessSelect) this.setMyAccess(accessSelect.value);
 
       this.roomCode = this.generateRoomCode();
       const peerId = this.formatPeerId(this.roomCode);
@@ -164,7 +257,7 @@
           }
         });
 
-        this.peer.on("open", (id) => {
+        this.peer.on("open", () => {
           this.setStatus(`Waiting for friend (${this.roomCode})`, "connecting");
           const codeEl = document.getElementById("host-generated-code");
           if (codeEl) codeEl.textContent = this.roomCode;
@@ -215,6 +308,8 @@
         this.myDisplayName = nameInput.value.trim();
         try { localStorage.setItem("subah_live_name", this.myDisplayName); } catch (_) {}
       }
+      const accessSelect = document.getElementById("join-share-access");
+      if (accessSelect) this.setMyAccess(accessSelect.value);
 
       this.isHost = false;
       this.setStatus(`Connecting to ${inputCode}...`, "connecting");
@@ -260,16 +355,17 @@
 
       this.connection.on("open", () => {
         this.isConnected = true;
-        this.setStatus("🟢 Live Connected", "connected");
+        this.setStatus("Live Connected", "connected");
 
-        // Send handshake
-        const myPayload = this.getMyShareableState();
+        // Handshake. No legacy "sharingMode" field: old builds would adopt it
+        // as a shared mode, and each side must keep deciding for itself.
         this.sendPayload({
           type: "handshake",
+          protocol: 2,
           displayName: this.myDisplayName,
           isHost: this.isHost,
-          sharingMode: this.sharingMode,
-          state: myPayload
+          access: this.myAccess,
+          state: this.getMyShareableState()
         });
 
         this.showActiveRoom();
@@ -298,8 +394,15 @@
 
       switch (data.type) {
         case "handshake":
-          this.peerDisplayName = data.displayName || "Friend";
-          if (data.sharingMode) this.sharingMode = data.sharingMode;
+          this.peerDisplayName = cleanText(data.displayName, MAX_NAME) || "Friend";
+          if (typeof data.access === "string") {
+            this.peerIsLegacy = false;
+            this.peerAccess = normalizeAccess(data.access);
+          } else {
+            // Pre-1.1 build: "coworking" meant ticking was allowed, nothing more.
+            this.peerIsLegacy = true;
+            this.peerAccess = data.sharingMode === "coworking" ? "edit" : "view";
+          }
           if (data.state) {
             this.handlePeerStateUpdate(data.state);
           }
@@ -311,22 +414,54 @@
           break;
 
         case "task-completed-celebration":
-          this.triggerPeerCelebration(data.taskText);
+          this.triggerPeerCelebration(cleanText(data.taskText, MAX_TASK_TEXT));
           break;
 
         case "reaction":
-          this.receiveReaction(data.emoji, data.from);
+          this.receiveReaction(cleanText(data.emoji, 8), cleanText(data.from, MAX_NAME));
           break;
 
+        case "access-change": {
+          const next = normalizeAccess(data.access);
+          if (next !== this.peerAccess) {
+            this.peerAccess = next;
+            if (window.subahApp) {
+              window.subahApp.showToast(
+                next === "edit"
+                  ? `✏️ ${this.peerDisplayName} made their goals editable. You can now check off, add, edit & delete them.`
+                  : `👁️ ${this.peerDisplayName} set their goals to View Only.`,
+                "info"
+              );
+            }
+          }
+          this.updatePeerInfoUI();
+          this.renderPeerTasksUI();
+          break;
+        }
+
         case "mode-change":
-          this.sharingMode = data.mode;
-          if (window.subahApp) {
-            window.subahApp.showToast(`Live mode set to: ${data.mode === "coworking" ? "Shared Co-Working" : "Dual Accountability"}`, "info");
+          // Legacy builds: only describes what THEY allow on THEIR list.
+          // It never changes what I allow on mine.
+          if (this.peerIsLegacy) {
+            this.peerAccess = data.mode === "coworking" ? "edit" : "view";
+            this.updatePeerInfoUI();
+            this.renderPeerTasksUI();
           }
           break;
 
+        case "remote-edit":
+          this.applyRemoteEdit(data);
+          break;
+
         case "toggle-task-request":
+          // Legacy builds send this to tick a goal.
           this.handleRemoteTaskToggle(data.taskId);
+          break;
+
+        case "edit-rejected":
+          if (window.subahApp) {
+            window.subahApp.showToast(`👁️ ${this.peerDisplayName}'s goals are View Only. Your change was not applied.`, "warning");
+          }
           break;
       }
     },
@@ -378,10 +513,17 @@
     },
 
     handlePeerStateUpdate(peerState) {
-      if (!peerState) return;
-      this.peerTasks = peerState.tasks || [];
-      this.peerStreak = peerState.streak || 1;
-      this.peerCompletedCount = peerState.completedCount || 0;
+      if (!peerState || typeof peerState !== "object") return;
+      const tasks = Array.isArray(peerState.tasks) ? peerState.tasks : [];
+      // Normalise everything that came over the wire before it reaches the DOM.
+      this.peerTasks = tasks.slice(0, 500).map((t) => ({
+        id: cleanText(t && t.id, 80),
+        text: cleanText(t && t.text, MAX_TASK_TEXT),
+        completed: Boolean(t && t.completed),
+        priority: ["high", "normal", "low"].includes(t && t.priority) ? t.priority : "normal"
+      })).filter((t) => t.id);
+      this.peerStreak = Math.max(1, parseInt(peerState.streak, 10) || 1);
+      this.peerCompletedCount = this.peerTasks.filter((t) => t.completed).length;
 
       this.renderPeerTasksUI();
     },
@@ -449,6 +591,7 @@
       const roomCodeEl = document.getElementById("room-code-banner-val");
       if (roomCodeEl) roomCodeEl.textContent = this.roomCode || "SUBAH";
 
+      this.syncAccessUI();
       this.updatePeerInfoUI();
       this.renderMyTasksPreview();
       this.renderPeerTasksUI();
@@ -465,6 +608,23 @@
 
       const myNameEl = document.getElementById("live-my-name");
       if (myNameEl) myNameEl.textContent = this.myDisplayName;
+
+      const friendTitle = document.getElementById("live-friend-column-title");
+      if (friendTitle) friendTitle.textContent = `${this.peerDisplayName}'s Goals`;
+
+      const badge = document.getElementById("live-peer-access-badge");
+      if (badge) {
+        const edit = this.peerAccess === "edit";
+        badge.className = `live-peer-access-badge ${edit ? "edit" : "view"}`;
+        badge.textContent = edit
+          ? (this.peerIsLegacy ? "✏️ You can check off" : "✏️ You can edit")
+          : "👁️ View Only";
+      }
+
+      const addRow = document.getElementById("live-peer-add-row");
+      if (addRow) addRow.style.display = this.canEditPeer() && !this.peerIsLegacy ? "flex" : "none";
+      const addInput = document.getElementById("live-peer-add-input");
+      if (addInput) addInput.placeholder = `Add a goal to ${this.peerDisplayName}'s list...`;
     },
 
     renderMyTasksPreview() {
@@ -486,27 +646,25 @@
 
       container.innerHTML = myState.tasks.map((t) => `
         <div class="live-task-row ${t.completed ? "completed" : ""}">
-          <button class="live-checkbox-btn" data-id="${t.id}" title="${t.completed ? 'Mark pending' : 'Complete goal'}">
+          <button class="live-checkbox-btn" data-id="${this.escapeHtml(String(t.id))}" title="${t.completed ? 'Mark pending' : 'Complete goal'}">
             ${t.completed ? "✅" : "⏳"}
           </button>
           <span class="live-task-text">${this.escapeHtml(t.text)}</span>
           ${t.priority === "high" ? `<span style="font-size: 11px; color: #fbbf24; font-weight: 600;">HIGH</span>` : ""}
         </div>
       `).join("");
-
-      container.querySelectorAll(".live-checkbox-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          const id = e.currentTarget.getAttribute("data-id");
-          if (id && window.subahChecklist) {
-            window.subahChecklist.toggleTask(id);
-          }
-        });
-      });
     },
 
     renderPeerTasksUI() {
       const container = document.getElementById("live-peer-tasks-list");
       if (!container) return;
+
+      // Don't wipe an in-progress rename; re-render once it finishes.
+      if (this.peerEditingId) {
+        this.peerRenderPending = true;
+        return;
+      }
+      this.peerRenderPending = false;
 
       const fillEl = document.getElementById("live-peer-progress-fill");
       const labelEl = document.getElementById("live-peer-progress-label");
@@ -517,58 +675,203 @@
 
       if (fillEl) fillEl.style.width = `${percent}%`;
       if (labelEl) labelEl.textContent = `${completed}/${total} (${percent}%)`;
+      this.updatePeerInfoUI();
 
       if (this.peerTasks.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--text-sub, #94a3b8); font-size: 13px;">Waiting for ${this.escapeHtml(this.peerDisplayName)}'s goals to sync...</div>`;
+        container.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--text-sub, #94a3b8); font-size: 13px;">${
+          this.canEditPeer() && !this.peerIsLegacy
+            ? `${this.escapeHtml(this.peerDisplayName)} has no goals yet. Add one below!`
+            : `Waiting for ${this.escapeHtml(this.peerDisplayName)}'s goals to sync...`
+        }</div>`;
         return;
       }
 
-      container.innerHTML = this.peerTasks.map((t) => `
-        <div class="live-task-row ${t.completed ? "completed" : ""}">
-          <button class="live-checkbox-btn" data-peer-id="${t.id}" title="${this.sharingMode === 'coworking' ? (t.completed ? 'Mark pending' : 'Check off together') : 'Friend goal'}">
+      const canEdit = this.canEditPeer();
+      const fullEdit = canEdit && !this.peerIsLegacy;
+
+      container.innerHTML = this.peerTasks.map((t) => {
+        const id = this.escapeHtml(t.id);
+        const checkTitle = canEdit
+          ? (t.completed ? "Mark pending" : "Check off for your friend")
+          : "View Only: your friend hasn't allowed editing";
+        return `
+        <div class="live-task-row ${t.completed ? "completed" : ""}" data-peer-row="${id}">
+          <button class="live-checkbox-btn ${canEdit ? "" : "readonly"}" data-peer-id="${id}" title="${checkTitle}" aria-disabled="${canEdit ? "false" : "true"}">
             ${t.completed ? "✅" : "⏳"}
           </button>
           <span class="live-task-text">${this.escapeHtml(t.text)}</span>
           ${t.priority === "high" ? `<span style="font-size: 11px; color: #fbbf24; font-weight: 600;">HIGH</span>` : ""}
-        </div>
-      `).join("");
+          ${fullEdit ? `
+            <span class="live-row-actions">
+              <button type="button" class="live-row-action rename" data-peer-id="${id}" title="Edit goal text">✎</button>
+              <button type="button" class="live-row-action delete" data-peer-id="${id}" title="Delete goal">🗑</button>
+            </span>` : ""}
+        </div>`;
+      }).join("");
+    },
 
-      container.querySelectorAll(".live-checkbox-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          const id = e.currentTarget.getAttribute("data-peer-id");
-          if (id) {
-            this.requestToggleRemoteTask(id);
-          }
-        });
+    handlePeerListClick(e) {
+      const renameBtn = e.target.closest(".live-row-action.rename");
+      if (renameBtn) {
+        const row = renameBtn.closest(".live-task-row");
+        this.startPeerRename(row, renameBtn.getAttribute("data-peer-id"));
+        return;
+      }
+
+      const deleteBtn = e.target.closest(".live-row-action.delete");
+      if (deleteBtn) {
+        const id = deleteBtn.getAttribute("data-peer-id");
+        // Two-step delete: first click arms, second click (within 3s) confirms.
+        if (!deleteBtn.classList.contains("confirm")) {
+          deleteBtn.classList.add("confirm");
+          deleteBtn.textContent = "Delete?";
+          setTimeout(() => {
+            if (deleteBtn.isConnected && deleteBtn.classList.contains("confirm")) {
+              deleteBtn.classList.remove("confirm");
+              deleteBtn.textContent = "🗑";
+            }
+          }, 3000);
+          return;
+        }
+        this.sendRemoteEdit("delete", { taskId: id });
+        return;
+      }
+
+      const checkBtn = e.target.closest(".live-checkbox-btn");
+      if (checkBtn) {
+        const id = checkBtn.getAttribute("data-peer-id");
+        if (id) this.requestToggleRemoteTask(id);
+      }
+    },
+
+    startPeerRename(row, taskId) {
+      if (!row || !taskId || !this.canEditPeer()) return;
+      const task = this.peerTasks.find((t) => t.id === taskId);
+      const textEl = row.querySelector(".live-task-text");
+      if (!task || !textEl) return;
+
+      this.peerEditingId = taskId;
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "form-input live-task-edit-input";
+      input.maxLength = MAX_TASK_TEXT;
+      input.value = task.text;
+      textEl.replaceWith(input);
+      input.focus();
+      input.select();
+
+      let done = false;
+      const finish = (save) => {
+        if (done) return;
+        done = true;
+        const text = cleanText(input.value, MAX_TASK_TEXT);
+        this.peerEditingId = null;
+        if (save && text && text !== task.text) {
+          this.sendRemoteEdit("rename", { taskId, text });
+        }
+        this.renderPeerTasksUI();
+      };
+      input.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter") finish(true);
+        if (ev.key === "Escape") finish(false);
       });
+      input.addEventListener("blur", () => finish(true));
+    },
+
+    // --- OUTGOING EDITS (on my friend's list) ---------------------------------
+    // Returns true when the request was sent.
+    sendRemoteEdit(action, fields = {}) {
+      if (!this.isConnected || !this.connection || !this.connection.open) {
+        if (window.subahApp) window.subahApp.showToast("Not connected to a friend.", "warning");
+        return false;
+      }
+      if (this.peerAccess !== "edit") {
+        if (window.subahApp) {
+          window.subahApp.showToast(`👁️ ${this.peerDisplayName} shares their goals as View Only.`, "info");
+        }
+        return false;
+      }
+      if (this.peerIsLegacy) {
+        if (action !== "toggle") {
+          if (window.subahApp) {
+            window.subahApp.showToast(`${this.peerDisplayName}'s Subah is an older version that only allows checking off goals. Ask them to update.`, "info");
+          }
+          return false;
+        }
+        this.sendPayload({ type: "toggle-task-request", taskId: fields.taskId });
+        return true;
+      }
+      this.sendPayload({ type: "remote-edit", action, ...fields });
+      return true;
     },
 
     requestToggleRemoteTask(taskId) {
-      if (this.sharingMode !== "coworking") {
-        if (window.subahApp) {
-          window.subahApp.showToast("In Dual Accountability mode (view-only). Switch to Shared Co-Working to check off goals together.", "info");
-        }
-        return;
-      }
-      this.sendPayload({
-        type: "toggle-task-request",
-        taskId: taskId
-      });
+      return this.sendRemoteEdit("toggle", { taskId });
     },
 
+    requestAddRemoteTask(text) {
+      return this.sendRemoteEdit("add", { text });
+    },
+
+    // --- INCOMING EDITS (on my list) — permission is enforced HERE ------------
     handleRemoteTaskToggle(taskId) {
-      if (this.sharingMode !== "coworking") return;
-      if (window.subahChecklist && Array.isArray(window.subahChecklist.tasks)) {
-        const task = window.subahChecklist.tasks.find((t) => t.id === taskId);
-        if (task && !task.isPrivate) {
-          const wasCompleted = Boolean(task.completed);
-          window.subahChecklist.toggleTask(taskId);
-          if (window.subahApp) {
-            const actionText = wasCompleted ? "marked pending" : "checked off";
-            window.subahApp.showToast(`🤝 ${this.peerDisplayName} ${actionText}: "${task.text}"!`, "success");
-          }
-        }
+      return this.applyRemoteEdit({ action: "toggle", taskId });
+    },
+
+    async applyRemoteEdit(data) {
+      const reject = (reason) => {
+        this.sendPayload({ type: "edit-rejected", reason });
+        return false;
+      };
+
+      if (this.myAccess !== "edit") return reject("view-only");
+
+      const now = Date.now();
+      this.incomingEditTimes = this.incomingEditTimes.filter((t) => now - t < EDIT_RATE_WINDOW_MS);
+      if (this.incomingEditTimes.length >= EDIT_RATE_LIMIT) return reject("rate-limited");
+      this.incomingEditTimes.push(now);
+
+      const checklist = window.subahChecklist;
+      if (!checklist || !Array.isArray(checklist.tasks)) return false;
+
+      const action = data && data.action;
+      const who = this.peerDisplayName;
+      const toast = (msg) => window.subahApp && window.subahApp.showToast(msg, "success");
+
+      if (action === "add") {
+        const text = cleanText(data.text, MAX_TASK_TEXT);
+        if (!text) return reject("invalid");
+        await checklist.addTaskFromFriend(text, who);
+        toast(`🤝 ${who} added a goal: "${text}"`);
+        return true;
       }
+
+      // Everything else targets one of my SHARED goals. Private goals are never
+      // sent to the friend, so an id pointing at one is refused.
+      const taskId = cleanText(data.taskId, 80);
+      const task = checklist.tasks.find((t) => String(t.id) === taskId);
+      if (!task || task.isPrivate) return reject("not-found");
+
+      if (action === "toggle") {
+        const wasCompleted = Boolean(task.completed);
+        await checklist.toggleTask(task.id, { fromFriend: true });
+        toast(`🤝 ${who} ${wasCompleted ? "marked pending" : "checked off"}: "${task.text}"`);
+        return true;
+      }
+      if (action === "rename") {
+        const text = cleanText(data.text, MAX_TASK_TEXT);
+        if (!text) return reject("invalid");
+        const oldText = await checklist.renameTask(task.id, text);
+        if (oldText !== null && oldText !== undefined) toast(`✏️ ${who} renamed "${oldText}" to "${text}"`);
+        return true;
+      }
+      if (action === "delete") {
+        const text = task.text;
+        await checklist.deleteTask(task.id);
+        toast(`🗑 ${who} deleted: "${text}"`);
+        return true;
+      }
+      return reject("invalid");
     },
 
     sendPayload(payload) {
@@ -593,6 +896,15 @@
     disconnect(reason = "Disconnected") {
       this.isConnected = false;
       this.cleanupPeer();
+
+      // Friend-granted rights end with the session.
+      this.peerAccess = "view";
+      this.peerIsLegacy = false;
+      this.peerTasks = [];
+      this.peerCompletedCount = 0;
+      this.peerEditingId = null;
+      const addRow = document.getElementById("live-peer-add-row");
+      if (addRow) addRow.style.display = "none";
 
       this.setStatus("Offline", "offline");
 

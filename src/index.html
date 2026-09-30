@@ -383,10 +383,10 @@
             </div>
 
             <div class="lobby-form-group">
-              <label style="font-size: 12px; font-weight: 600; color: var(--text-sub, #94a3b8);">Sharing Permission</label>
-              <select id="live-sharing-mode" class="form-select">
-                <option value="dual">Dual Accountability (View each other's goals)</option>
-                <option value="coworking">Shared Co-Working (Work on goals together)</option>
+              <label for="host-share-access" style="font-size: 12px; font-weight: 600; color: var(--text-sub, #94a3b8);">Share My Goals As</label>
+              <select id="host-share-access" class="form-select live-share-access-select">
+                <option value="view">👁️ View Only: friends can see my goals</option>
+                <option value="edit">✏️ Editable: friends can check off, add, edit &amp; delete</option>
               </select>
             </div>
 
@@ -421,6 +421,14 @@
             <div class="lobby-form-group">
               <label style="font-size: 12px; font-weight: 600; color: var(--text-sub, #94a3b8);">Room Code</label>
               <input type="text" id="join-room-code" class="form-input" placeholder="e.g. SUB-4892" style="font-family: monospace; font-size: 15px; letter-spacing: 1px; text-transform: uppercase;" />
+            </div>
+
+            <div class="lobby-form-group">
+              <label for="join-share-access" style="font-size: 12px; font-weight: 600; color: var(--text-sub, #94a3b8);">Share My Goals As</label>
+              <select id="join-share-access" class="form-select live-share-access-select">
+                <option value="view">👁️ View Only: friends can see my goals</option>
+                <option value="edit">✏️ Editable: friends can check off, add, edit &amp; delete</option>
+              </select>
             </div>
 
             <button id="btn-join-live-room" class="btn-primary-subtle" style="padding: 10px 18px; font-size: 13.5px; font-weight: 600; margin-top: auto;">
@@ -469,8 +477,12 @@
                   <span style="font-size: 18px;">📋</span>
                   <div>
                     <span class="column-title" id="live-my-name">My Goals</span>
-                    <span class="column-badge">Host / Local</span>
+                    <span class="column-badge">You</span>
                   </div>
+                </div>
+                <div class="live-access-switch" role="radiogroup" aria-label="What your friend can do with your goals">
+                  <button type="button" class="live-access-btn active" data-access="view" role="radio" aria-checked="true" title="Friend can only see your goals">👁️ View Only</button>
+                  <button type="button" class="live-access-btn" data-access="edit" role="radio" aria-checked="false" title="Friend can check off, add, edit and delete your goals">✏️ Editable</button>
                 </div>
               </div>
 
@@ -499,6 +511,7 @@
                     <span class="column-badge" style="background: rgba(52,211,153,0.15); color: #34d399;">Live Connected</span>
                   </div>
                 </div>
+                <span id="live-peer-access-badge" class="live-peer-access-badge view" title="What your friend allows you to do with their goals">👁️ View Only</span>
               </div>
 
               <div class="column-progress-bar">
@@ -513,6 +526,12 @@
 
               <div id="live-peer-tasks-list" class="live-tasks-scroll">
                 <!-- Rendered dynamically -->
+              </div>
+
+              <!-- Shown only when the friend shares their goals as Editable -->
+              <div id="live-peer-add-row" class="live-peer-add-row" style="display: none;">
+                <input type="text" id="live-peer-add-input" class="form-input" maxlength="300" placeholder="Add a goal to your friend's list..." autocomplete="off" />
+                <button type="button" id="btn-live-peer-add" class="btn-primary-subtle">＋ Add</button>
               </div>
             </div>
 

@@ -1,11 +1,11 @@
 {
   "name": "subah-taskbook",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Subah - Daily Task & Surprise Reward Book",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "node test/verify-logic.js && node test/verify-media-ui.js && node test/test-ui-simulation.js && node test/verify-deep-scrutiny.js && node test/verify-live-and-update.js && node test/verify-window-zoom.js",
+    "test": "node test/verify-logic.js && node test/verify-media-ui.js && node test/test-ui-simulation.js && node test/verify-deep-scrutiny.js && node test/verify-live-and-update.js && node test/verify-window-zoom.js && node test/verify-live-access.js",
     "package": "npx @electron/packager . Subah --platform=win32 --arch=x64 --out=dist --icon=assets/icon.ico --ignore=\"dist\" --overwrite",
     "shortcut": "powershell -ExecutionPolicy Bypass -File scripts/create_desktop_shortcut.ps1"
   },
