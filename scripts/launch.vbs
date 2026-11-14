@@ -11,11 +11,13 @@ If fso.FileExists(fso.BuildPath(scriptDir, "package.json")) Then
 ElseIf fso.FileExists(fso.BuildPath(fso.GetParentFolderName(scriptDir), "package.json")) Then
     rootDir = fso.GetParentFolderName(scriptDir)
 Else
+    Dim userProfile
+    userProfile = WshShell.ExpandEnvironmentStrings("%USERPROFILE%")
     candidates = Array( _
-        "C:\Users\chkam\OneDrive\Desktop\02_Projects & Development\Subah-TaskBook", _
-        "C:\Users\chkam\OneDrive\Desktop\Subah-TaskBook", _
-        "C:\Users\chkam\Desktop\02_Projects & Development\Subah-TaskBook", _
-        "C:\Users\chkam\Desktop\Subah-TaskBook" _
+        userProfile & "\OneDrive\Desktop\02_Projects & Development\Subah-TaskBook", _
+        userProfile & "\OneDrive\Desktop\Subah-TaskBook", _
+        userProfile & "\Desktop\02_Projects & Development\Subah-TaskBook", _
+        userProfile & "\Desktop\Subah-TaskBook" _
     )
     rootDir = scriptDir
     For Each cand In candidates
