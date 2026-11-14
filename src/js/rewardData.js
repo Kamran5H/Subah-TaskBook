@@ -138,8 +138,8 @@ const DEFAULT_REWARDS = [
     "title": "Ottoman Sufi Music - Turkish Ney Flute",
     "artist": "Servet",
     "duration": "5 mins",
-    "youtubeId": "3ATc6DwYyTQ",
-    "externalUrl": "https://www.youtube.com/watch?v=3ATc6DwYyTQ",
+    "youtubeId": "m_wFEB4Oxlo",
+    "externalUrl": "https://www.youtube.com/watch?v=m_wFEB4Oxlo",
     "description": "Deep, breathy tones of the hollow reed Ney flute symbolizing the soul's yearning for eternal stillness.",
     "searchUrl": "https://www.youtube.com/results?search_query=Ottoman%20Sufi%20Music%20-%20Turkish%20Ney%20Flute%20Servet"
   },
